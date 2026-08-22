@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)file:///C:/Users/kenki/Downloads/jobun-drill_6.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>條文ドリル｜行政書士 条文演習</title>
+<style>
+:root{
+  --paper:#EFEEE8;        /* 灰白の紙 */
+  --paper-raised:#F8F7F3;
+  --sumi:#16181C;         /* 墨 */
+  --sumi-soft:#5A5C60;
+  --hairline:#D3D1C8;
+  --shu:#C1352B;          /* 朱：校正・添削の色 */
+  --shu-pale:#F3E2DF;
+  --ai:#2E4A62;           /* 藍：構造・見出し */
+  --wakaba:#3F6B48;       /* 若草：正解 */
+  --mincho:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --gothic:"Hiragino Sans","Yu Gothic","Noto Sans JP",-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--sumi);
+  font-family:var(--gothic);
+  font-size:16px;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:780px;margin:0 auto;padding:0 20px 96px}
+
+/* ── 表紙 ───────────────────────── */
+#cover{
+  position:fixed;inset:0;background:var(--paper);z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;padding:32px;
+}
+#cover.hide{opacity:0;pointer-events:none;transition:opacity .45s ease}
+body.covered{overflow:hidden}
+body.covered .wrap{visibility:hidden}
+.cover-rule{width:1px;height:56px;background:var(--shu)}
+.cover-title{
+  font-family:var(--mincho);font-size:clamp(40px,11vw,60px);font-weight:600;
+  letter-spacing:.34em;margin:22px 0 0;text-indent:.34em;line-height:1.15;
+}
+.cover-sub{
+  font-family:var(--mincho);font-size:15px;letter-spacing:.28em;text-indent:.28em;
+  color:var(--sumi-soft);margin:16px 0 0;
+}
+.cover-kicker{
+  font-size:10px;letter-spacing:.42em;text-indent:.42em;color:var(--shu);
+  margin:30px 0 0;font-weight:600;
+}
+.cover-note{font-size:11.5px;color:var(--sumi-soft);text-align:center;line-height:1.9;margin:0}
+#start{
+  margin:38px 0 26px;font-family:var(--mincho);font-size:17px;font-weight:600;
+  letter-spacing:.3em;text-indent:.3em;color:var(--paper);background:var(--ai);
+  border:0;border-radius:2px;padding:15px 54px;cursor:pointer;
+}
+#start:hover{background:#25real}
+#start:hover{background:#26405A}
+
+/* ── 見出し ─────────────────────── */
+header.masthead{
+  border-bottom:2px solid var(--sumi);margin:22px 0 0;padding-bottom:8px;
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+}
+.masthead h1{
+  font-family:var(--mincho);font-size:21px;font-weight:600;
+  letter-spacing:.22em;text-indent:.22em;margin:0;
+}
+.masthead .stamp{
+  font-size:10px;letter-spacing:.2em;color:var(--shu);
+  border:1px solid var(--shu);border-radius:2px;padding:3px 7px;white-space:nowrap;
+}
+
+/* ── 操作卓 ─────────────────────── */
+.console{padding:18px 0 4px}
+.row{display:flex;align-items:center;gap:10px;margin:0 0 14px;flex-wrap:wrap}
+.eyebrow{
+  font-size:10.5px;letter-spacing:.24em;color:var(--sumi-soft);
+  border-left:2px solid var(--ai);padding-left:8px;margin:0 0 8px;
+}
+.seg{display:flex;border:1px solid var(--hairline);border-radius:2px;overflow:hidden;width:100%}
+.seg button{
+  flex:1;border:0;background:transparent;padding:10px 4px;font-size:13.5px;
+  font-family:var(--gothic);color:var(--sumi-soft);cursor:pointer;
+  border-right:1px solid var(--hairline);
+}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ai);color:var(--paper);font-weight:600}
+select,input[type=text]{
+  font-family:var(--gothic);font-size:14px;color:var(--sumi);
+  background:var(--paper-raised);border:1px solid var(--hairline);border-radius:2px;
+  padding:9px 10px;width:100%;
+}
+.hint{font-size:11.5px;color:var(--sumi-soft);line-height:1.8;margin:6px 0 0}
+.hint.warn{color:var(--shu)}
+button.primary{
+  width:100%;border:0;border-radius:2px;background:var(--sumi);color:var(--paper);
+  font-family:var(--mincho);font-size:16px;font-weight:600;letter-spacing:.3em;
+  text-indent:.3em;padding:15px;cursor:pointer;margin:6px 0 0;
+}
+button.primary:disabled{background:#A8A69D;cursor:default}
+button.ghost{
+  width:100%;border:1px solid var(--hairline);border-radius:2px;background:transparent;
+  color:var(--ai);font-family:var(--gothic);font-size:14px;padding:11px;cursor:pointer;
+}
+button.ghost:hover{background:var(--paper-raised)}
+
+/* ── 問題 ───────────────────────── */
+.sheet{margin:26px 0 0;border-top:1px solid var(--hairline);padding-top:22px}
+.artline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 3px}
+.artno{font-family:var(--mincho);font-size:19px;font-weight:600;letter-spacing:.06em}
+.artcap{font-family:var(--mincho);font-size:15px;color:var(--ai)}
+.meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--sumi-soft);margin:0 0 14px}
+.stars{color:var(--shu);letter-spacing:.1em}
+.label{font-size:10.5px;letter-spacing:.24em;color:var(--sumi-soft);margin:0 0 6px}
+.jobun{
+  font-family:var(--mincho);font-size:16.5px;line-height:2.05;
+  background:var(--paper-raised);border-left:3px solid var(--ai);
+  padding:16px 18px;white-space:pre-wrap;
+}
+.jobun .topic{display:block;font-size:13px;letter-spacing:.14em;color:var(--ai);margin:0 0 8px}
+.blank{
+  color:var(--shu);font-weight:600;border-bottom:1.5px solid var(--shu);
+  padding:0 .35em;
+}
+.ref{
+  font-family:var(--mincho);font-size:14.5px;line-height:1.95;color:var(--sumi-soft);
+  border-left:2px solid var(--hairline);padding:10px 14px;white-space:pre-wrap;margin:14px 0 0;
+}
+
+/* ── 解答欄：マス目 ─────────────── */
+.answer{margin:20px 0 0}
+textarea{
+  width:100%;font-family:var(--mincho);font-size:16px;line-height:1.9;
+  color:var(--sumi);background:var(--paper-raised);
+  border:1px solid var(--hairline);border-radius:2px;padding:12px;resize:vertical;
+  min-height:88px;
+}
+textarea:focus{outline:2px solid var(--ai);outline-offset:-1px}
+.grid{
+  display:grid;grid-template-columns:repeat(20,1fr);gap:0;
+  border:1px solid var(--sumi);border-right:0;border-bottom:0;margin:10px 0 0;
+}
+.grid .cell{
+  aspect-ratio:1/1;border-right:1px solid var(--hairline);border-bottom:1px solid var(--hairline);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mincho);font-size:clamp(11px,3vw,16px);line-height:1;
+}
+.grid .cell.tenth{border-right-color:var(--sumi)}
+.grid .cell.over{color:var(--shu);background:var(--shu-pale)}
+.count{display:flex;justify-content:space-between;font-size:11.5px;color:var(--sumi-soft);margin:7px 0 0}
+.count b{font-variant-numeric:tabular-nums;font-weight:600;color:var(--sumi)}
+.count b.over{color:var(--shu)}
+
+/* ── 採点 ───────────────────────── */
+.score{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 12px;
+  border-bottom:1px solid var(--hairline);padding-bottom:8px}
+.score .n{font-family:var(--mincho);font-size:40px;font-weight:600;font-variant-numeric:tabular-nums}
+.score .n.hi{color:var(--wakaba)} .score .n.mid{color:#9A6B1E} .score .n.lo{color:var(--shu)}
+.answerbox{
+  font-family:var(--mincho);font-size:16px;line-height:1.95;
+  border:1px solid var(--wakaba);border-left-width:3px;padding:13px 15px;background:#F1F5F0;
+}
+.case{border:1px solid var(--hairline);border-left:3px solid var(--ai);padding:12px 14px;margin:0 0 9px;background:var(--paper-raised)}
+.case a{color:var(--ai);font-weight:600;text-decoration:none;font-size:14.5px}
+.case a:hover{text-decoration:underline}
+.case p{margin:5px 0 0;font-size:12.5px;color:var(--sumi-soft);line-height:1.85}
+.opts{margin:30px 0 0;border-top:1px solid var(--hairline);padding-top:16px}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 0;font-size:14px}
+.sw{position:relative;width:44px;height:25px;flex:0 0 auto;border:0;border-radius:99px;
+  background:var(--hairline);cursor:pointer;transition:background .18s}
+.sw[aria-pressed="true"]{background:var(--ai)}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;
+  background:var(--paper);transition:transform .18s}
+.sw[aria-pressed="true"]::after{transform:translateX(19px)}
+footer{margin:34px 0 0;border-top:1px solid var(--hairline);padding-top:14px;
+  font-size:11px;color:var(--sumi-soft);line-height:1.95}
+footer a{color:var(--ai)}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--hairline);
+  border-top-color:var(--ai);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.msg{font-size:13px;padding:11px 13px;border-radius:2px;margin:12px 0 0;line-height:1.8}
+.msg.err{background:var(--shu-pale);color:#8E2620;border-left:3px solid var(--shu)}
+.msg.info{background:var(--paper-raised);color:var(--sumi-soft);border-left:3px solid var(--hairline)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="covered">
+
+<div id="cover">
+  <div class="cover-rule"></div>
+  <h1 class="cover-title">條文ドリル</h1>
+  <p class="cover-sub">民法・行政法</p>
+  <p class="cover-kicker">GYOSEISHOSHI</p>
+  <button id="start">始める</button>
+  <p class="cover-note">
+    条文は e-Gov法令検索、判例と解説は Wikibooks から取得します。<br>
+    重要度の印は目安です。教材で確認してください。
+  </p>
+</div>
+
+<div class="wrap">
+  <header class="masthead">
+    <h1>條文ドリル</h1>
+    <span class="stamp">行政書士</span>
+  </header>
+
+  <section class="console">
+    <p class="eyebrow">出題元</p>
+    <div class="seg" id="segSource">
+      <button data-v="range" aria-pressed="true">範囲から</button>
+      <button data-v="number" aria-pressed="false">条番号を指定</button>
+    </div>
+
+    <div id="paneRange" style="margin-top:14px">
+      <div class="row"><select id="scope"><option value="0">民法</option><option value="1">行政法（手続・不服審査・事件訴訟）</option><option value="2">行政法＋国家賠償法</option><option value="3">民法＋行政法（総合）</option><option value="4">行政手続法</option><option value="5">行政不服審査法</option><option value="6">行政事件訴訟法</option><option value="7">国家賠償法</option><option value="8">憲法</option><option value="9">会社法・商法</option><option value="10">地方自治法</option></select></div>
+      <div class="row"><button class="ghost" id="loadScope">この範囲を読み込む</button></div>
+      <div class="row" id="fieldRow" hidden=""><select id="field"></select></div>
+      <p class="eyebrow" style="margin-top:16px">重要度の効かせ方</p>
+      <div class="seg" id="segWeight">
+        <button data-v="flat" aria-pressed="false">均等</button>
+        <button data-v="normal" aria-pressed="true">標準</button>
+        <button data-v="focused" aria-pressed="false">重要条文中心</button>
+      </div>
+    </div>
+
+    <div id="paneNumber" hidden="" style="margin-top:14px">
+      <div class="row"><select id="manualLaw"><option value="129AC0000000089">民法</option><option value="405AC0000000088">行政手続法</option><option value="426AC0000000068">行政不服審査法</option><option value="337AC0000000139">行政事件訴訟法</option><option value="322AC0000000125">国家賠償法</option><option value="322AC0000000067">地方自治法</option><option value="321CONSTITUTION">日本国憲法</option><option value="417AC0000000086">会社法</option><option value="132AC0000000048">商法</option></select></div>
+      <div class="row"><input type="text" id="articleNo" value="466" inputmode="text" placeholder="466／466の2"></div>
+      <p class="hint">枝番は「466の2」のように入力します。</p>
+    </div>
+
+    <p class="eyebrow" style="margin-top:18px">形式</p>
+    <div class="seg" id="segMode">
+      <button data-v="blank" aria-pressed="true">穴埋め</button>
+      <button data-v="descriptive" aria-pressed="false">記述式40字</button>
+      <button data-v="doctrine" aria-pressed="false">判例法理</button>
+      <button data-v="recall" aria-pressed="false">全文再現</button>
+    </div>
+    <p class="hint" id="modeNote">条文の一部を空欄にします。</p>
+
+    <button class="primary" id="draw">出題する</button>
+    <div id="status"></div>
+  </section>
+
+  <section id="sheet" hidden="" class="sheet"></section>
+  <section id="cases" hidden="" style="margin-top:22px"></section>
+
+  <section class="opts">
+    <p class="eyebrow">出題オプション</p>
+    <div class="opt" id="optHint"><span>字数ヒントを表示</span>
+      <button class="sw" aria-pressed="true" aria-label="字数ヒントを表示"></button></div>
+    <div class="opt" id="optEnding"><span>文末（効果部分）を重視</span>
+      <button class="sw" aria-pressed="true" aria-label="文末を重視"></button></div>
+    <p class="hint" id="endingNote">条文の効果は文末に置かれます。そこを空欄にしやすくします。</p>
+  </section>
+
+  <footer>
+    条文：<a href="https://laws.e-gov.go.jp/" target="_blank" rel="noopener">e-Gov法令検索</a>（デジタル庁）<br>
+    判例・解説：<a href="https://ja.wikibooks.org/" target="_blank" rel="noopener">Wikibooks コンメンタール</a>（CC BY-SA）<br>
+    重要度の印は本アプリ独自の目安です。教材で確認してください。
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ══════════════════════════════════════════════
+   法令と出題範囲
+   ══════════════════════════════════════════════ */
+const LAWS = {
+  minpo:     {name:"民法",           id:"129AC0000000089", wiki:"民法"},
+  tetsuzuki: {name:"行政手続法",     id:"405AC0000000088", wiki:"行政手続法"},
+  fufuku:    {name:"行政不服審査法", id:"426AC0000000068", wiki:"行政不服審査法"},
+  jiken:     {name:"行政事件訴訟法", id:"337AC0000000139", wiki:"行政事件訴訟法"},
+  kokubai:   {name:"国家賠償法",     id:"322AC0000000125", wiki:"国家賠償法"},
+  chihou:    {name:"地方自治法",     id:"322AC0000000067", wiki:"地方自治法"},
+  kenpou:    {name:"日本国憲法",     id:"321CONSTITUTION", wiki:"日本国憲法"},
+  kaisha:    {name:"会社法",         id:"417AC0000000086", wiki:"会社法"},
+  shouhou:   {name:"商法",           id:"132AC0000000048", wiki:"商法"},
+};
+const L = LAWS;
+
+const SCOPES = [
+  {name:"民法", laws:[L.minpo], note:""},
+  {name:"行政法（手続・不服審査・事件訴訟）", laws:[L.tetsuzuki,L.fufuku,L.jiken], note:""},
+  {name:"行政法＋国家賠償法", laws:[L.tetsuzuki,L.fufuku,L.jiken,L.kokubai], note:""},
+  {name:"民法＋行政法（総合）", laws:[L.minpo,L.tetsuzuki,L.fufuku,L.jiken,L.kokubai], note:"読み込みに時間がかかります"},
+  {name:"行政手続法", laws:[L.tetsuzuki], note:""},
+  {name:"行政不服審査法", laws:[L.fufuku], note:""},
+  {name:"行政事件訴訟法", laws:[L.jiken], note:""},
+  {name:"国家賠償法", laws:[L.kokubai], note:""},
+  {name:"憲法", laws:[L.kenpou], note:""},
+  {name:"会社法・商法", laws:[L.kaisha,L.shouhou], note:"読み込みに時間がかかります"},
+  {name:"地方自治法", laws:[L.chihou], note:"条文数が多く読み込みが重いです"},
+];
+
+/* ══════════════════════════════════════════════
+   重み付け  3=最重要 2=択一頻出 1=標準（未掲載は0）
+   書式：条番号|重み|メモ
+   ══════════════════════════════════════════════ */
+const WEIGHT_SOURCE = {
+"129AC0000000089": "1|3|基本原則（信義則・権利濫用）\n2|1|解釈の基準\n3の2|2|意思能力（2017年新設）\n4|1|成年\n5|3|未成年者の法律行為\n6|1|営業の許可\n7|2|後見開始の審判\n9|3|成年被後見人の法律行為\n11|2|保佐開始の審判\n13|3|保佐人の同意を要する行為等\n15|2|補助開始の審判\n17|2|補助人の同意を要する旨の審判等\n20|3|制限行為能力者の相手方の催告権\n21|3|制限行為能力者の詐術\n25|1|不在者の財産の管理\n30|2|失踪の宣告\n31|2|失踪の宣告の効力\n32|3|失踪の宣告の取消し\n32の2|1|同時死亡の推定\n33|1|法人の成立等\n34|2|法人の能力\n86|1|不動産及び動産\n87|2|主物及び従物\n88|1|天然果実及び法定果実\n89|1|果実の帰属\n90|3|公序良俗\n91|1|任意規定と異なる意思表示\n92|2|任意規定と異なる慣習\n93|3|心裡留保\n94|3|虚偽表示（2項の第三者保護）\n95|3|錯誤（2017年改正で取消しに）\n96|3|詐欺又は強迫\n97|2|意思表示の効力発生時期等\n98の2|1|意思表示の受領能力\n99|2|代理行為の要件及び効果\n100|1|本人のためにすることを示さない意思表示\n101|2|代理行為の瑕疵\n102|2|代理人の行為能力\n103|1|権限の定めのない代理人の権限\n104|2|任意代理人による復代理人の選任\n105|1|法定代理人による復代理人の選任\n106|1|復代理人の権限等\n107|3|代理権の濫用（2017年新設）\n108|3|自己契約及び双方代理等\n109|3|代理権授与の表示による表見代理等\n110|3|権限外の行為の表見代理\n111|1|代理権の消滅事由\n112|3|代理権消滅後の表見代理等\n113|3|無権代理\n114|2|無権代理の相手方の催告権\n115|2|無権代理の相手方の取消権\n116|3|無権代理行為の追認\n117|3|無権代理人の責任\n119|2|無効な行為の追認\n120|3|取消権者\n121|2|取消しの効果\n121の2|3|原状回復の義務（2017年新設）\n122|1|取り消すことができる行為の追認\n124|2|追認の要件\n125|3|法定追認\n126|3|取消権の期間の制限\n130|2|条件の成就の妨害等\n136|1|期限の利益及びその放棄\n137|2|期限の利益の喪失\n140|1|初日不算入\n143|1|暦による期間の計算\n144|1|時効の効力\n145|3|時効の援用\n146|3|時効の利益の放棄\n147|3|裁判上の請求等による完成猶予及び更新\n148|2|強制執行等による完成猶予及び更新\n149|2|仮差押え等による完成猶予\n150|3|催告による完成猶予\n151|2|協議を行う旨の合意（2017年新設）\n152|3|承認による時効の更新\n153|2|完成猶予・更新の効力が及ぶ者の範囲\n158|2|未成年者等と時効の完成猶予\n159|1|夫婦間の権利の時効の完成猶予\n160|1|相続財産に関する時効の完成猶予\n161|1|天災等による時効の完成猶予\n162|3|所有権の取得時効\n163|2|所有権以外の財産権の取得時効\n166|3|債権等の消滅時効\n167|2|人の生命身体の侵害による損害賠償請求権\n168|1|定期金債権の消滅時効\n169|2|判決で確定した権利の消滅時効\n175|2|物権の創設（物権法定主義）\n176|3|物権の設定及び移転（意思主義）\n177|3|不動産に関する物権の変動の対抗要件\n178|3|動産に関する物権の譲渡の対抗要件\n179|2|混同\n180|2|占有権の取得\n181|1|代理占有\n182|2|現実の引渡し及び簡易の引渡し\n183|2|占有改定\n184|2|指図による占有移転\n185|2|占有の性質の変更\n186|3|占有の態様等に関する推定\n187|2|占有の承継\n188|3|占有物について行使する権利の適法の推定\n189|2|善意の占有者による果実の取得等\n190|2|悪意の占有者による果実の返還等\n191|1|占有者による損害賠償\n192|3|即時取得\n193|3|盗品又は遺失物の回復\n194|2|盗品又は遺失物の回復（代価弁償）\n195|1|動物の占有による権利の取得\n196|2|占有者による費用の償還請求\n197|2|占有の訴え\n198|2|占有保持の訴え\n199|2|占有保全の訴え\n200|2|占有回収の訴え\n201|1|占有の訴えの提起期間\n202|2|本権の訴えとの関係\n203|2|占有権の消滅事由\n204|1|代理占有権の消滅事由\n205|1|準占有\n206|2|所有権の内容\n207|1|土地所有権の範囲\n209|2|隣地の使用\n210|2|公道に至るための他の土地の通行権\n211|1|通行の場所及び方法\n212|1|償金の支払\n213|2|分割によって公道に通じない土地が生じた場合\n233|2|竹木の枝の切除及び根の切取り\n239|2|無主物の帰属\n240|1|遺失物の拾得\n241|1|埋蔵物の発見\n242|3|不動産の付合\n243|2|動産の付合\n244|1|付合物の帰属\n245|1|混和\n246|2|加工\n248|1|付合等に伴う償金の請求\n249|3|共有物の使用\n250|2|共有持分の割合の推定\n251|3|共有物の変更\n252|3|共有物の管理\n252の2|2|共有物の管理者\n253|2|共有物に関する負担\n254|1|共有物についての債権\n255|2|持分の放棄及び共有者の死亡\n256|3|共有物の分割請求\n258|3|裁判による共有物の分割\n262の2|2|所在等不明共有者の持分の取得\n262の3|2|所在等不明共有者の持分の譲渡\n263|1|共有の性質を有する入会権\n264|1|準共有\n265|2|地上権の内容\n266|1|地代\n268|1|地上権の存続期間\n269|1|工作物等の収去等\n269の2|1|地下又は空間を目的とする地上権\n270|1|永小作権の内容\n280|2|地役権の内容\n281|2|地役権の付従性\n283|2|地役権の時効取得\n284|1|共有と地役権の時効取得\n285|1|用水地役権\n288|1|承役地の所有者の工作物の使用\n289|2|承役地の時効取得による地役権の消滅\n294|1|共有の性質を有しない入会権\n295|3|留置権の内容\n296|2|留置権の不可分性\n297|1|留置権者による果実の収取\n298|2|留置権者による留置物の保管等\n299|2|留置権者による費用の償還請求\n300|2|留置権の行使と債権の消滅時効\n301|1|担保の供与による留置権の消滅\n302|2|占有の喪失による留置権の消滅\n303|2|先取特権の内容\n304|3|物上代位\n306|2|一般の先取特権\n307|1|共益費用の先取特権\n308|1|雇用関係の先取特権\n309|1|葬式費用の先取特権\n310|1|日用品供給の先取特権\n311|1|動産の先取特権\n325|1|不動産の先取特権\n329|2|一般の先取特権の順位\n330|2|動産の先取特権の順位\n331|1|不動産の先取特権の順位\n333|3|先取特権と第三取得者\n334|1|先取特権と動産質権との競合\n336|2|一般の先取特権の対抗力\n341|1|質権の規定の準用\n342|2|質権の内容\n343|2|質権の目的\n344|3|質権の設定（要物性）\n345|3|質権設定者による代理占有の禁止\n346|1|質権の被担保債権の範囲\n347|1|質物の留置\n348|2|転質\n349|3|契約による質物の処分の禁止\n350|1|留置権及び先取特権の規定の準用\n351|1|物上保証人の求償権\n352|3|動産質の対抗要件\n353|1|質物の占有の回復\n354|1|動産質権の実行\n355|1|動産質権の順位\n356|2|不動産質権者による使用及び収益\n357|1|不動産質権者による管理の費用等の負担\n358|2|不動産質権者による利息の請求の禁止\n359|1|設定行為に別段の定めがある場合等\n360|2|不動産質権の存続期間\n361|1|抵当権の規定の準用\n362|2|権利質の目的等\n364|2|債権を目的とする質権の対抗要件\n366|2|質権者による債権の取立て等\n369|3|抵当権の内容\n370|3|抵当権の効力の及ぶ範囲\n371|2|果実に対する抵当権の効力\n372|3|留置権等の規定の準用（物上代位）\n373|3|抵当権の順位\n374|2|抵当権の順位の変更\n375|2|抵当権の被担保債権の範囲\n376|2|抵当権の処分\n377|1|抵当権の処分の対抗要件\n378|3|代価弁済\n379|3|抵当権消滅請求\n380|1|抵当権消滅請求をすることができない者\n381|1|抵当権消滅請求の時期\n382|1|抵当権消滅請求の手続\n383|1|抵当権消滅請求の書面の送付\n384|2|債権者のみなし承諾\n386|1|抵当権消滅請求の効果\n387|2|抵当権者の同意の登記がある場合の賃貸借の対抗力\n388|3|法定地上権\n389|2|抵当地の上の建物の競売\n390|2|抵当不動産の第三取得者による買受け\n391|1|抵当不動産の第三取得者による費用の償還請求\n392|3|共同抵当における代価の配当\n393|2|代位による抵当権の行使\n394|2|抵当不動産以外の財産からの弁済\n395|3|抵当建物使用者の引渡しの猶予\n396|2|抵当権の消滅時効\n397|2|抵当不動産の時効取得による抵当権の消滅\n398|1|抵当権の目的である地上権等の放棄\n398の2|3|根抵当権\n398の3|2|根抵当権の被担保債権の範囲\n398の4|2|根抵当権の被担保債権の範囲の変更\n398の6|1|根抵当権の元本確定期日の定め\n398の7|2|根抵当権の被担保債権の譲渡等\n398の12|2|根抵当権の譲渡\n398の19|2|根抵当権の元本確定請求\n398の20|2|根抵当権の元本確定事由\n399|1|債権の目的\n400|2|特定物の引渡しの場合の注意義務\n401|2|種類債権\n402|1|金銭債権\n404|2|法定利率（変動制）\n405|1|利息の元本への組入れ\n406|2|選択債権における選択権の帰属\n412|3|履行期と履行遅滞\n412の2|3|履行不能\n413|2|受領遅滞\n413の2|2|履行遅滞中又は受領遅滞中の履行不能と帰責事由\n414|3|履行の強制\n415|3|債務不履行による損害賠償\n416|3|損害賠償の範囲\n417|1|損害賠償の方法\n418|3|過失相殺\n419|2|金銭債務の特則\n420|2|賠償額の予定\n422|1|損害賠償による代位\n422の2|3|代償請求権\n423|3|債権者代位権の要件\n423の2|2|代位行使の範囲\n423の3|3|債権者への支払又は引渡し\n423の4|1|相手方の抗弁\n423の5|2|債務者の取立てその他の処分の権限等\n423の6|1|被代位権利の行使に係る訴えを提起した場合の訴訟告知\n423の7|2|登記又は登録の請求権を保全するための債権者代位権\n424|3|詐害行為取消請求\n424の2|3|相当の対価を得てした財産の処分行為の特則\n424の3|3|特定の債権者に対する担保の供与等の特則\n424の4|2|過大な代物弁済等の特則\n424の5|2|転得者に対する詐害行為取消請求\n424の6|2|財産の返還又は価額の償還の請求\n424の7|2|被告及び訴訟告知\n424の8|1|詐害行為取消しの範囲\n424の9|2|債権者への支払又は引渡し\n425|3|認容判決の効力が及ぶ者の範囲\n425の2|1|債務者の受けた反対給付に関する受益者の権利\n426|2|詐害行為取消権の期間の制限\n427|3|分割債権及び分割債務\n428|2|不可分債権\n430|2|不可分債務\n432|2|連帯債権\n436|3|連帯債務者に対する履行の請求\n437|1|連帯債務者の一人についての法律行為の無効等\n438|2|連帯債務者の一人との間の更改\n439|2|連帯債務者の一人による相殺等\n440|2|連帯債務者の一人との間の混同\n441|3|相対的効力の原則\n442|3|連帯債務者間の求償権\n443|1|通知を怠った連帯債務者の求償の制限\n444|2|償還をする資力のない者の負担部分の分担\n446|3|保証人の責任等\n447|1|保証債務の範囲\n448|2|保証人の負担と主たる債務の目的又は態様\n452|3|催告の抗弁\n453|3|検索の抗弁\n454|3|連帯保証の場合の特則\n455|1|催告の抗弁及び検索の抗弁の効果\n456|1|数人の保証人がある場合\n457|3|主たる債務者について生じた事由の効力\n458の2|2|主たる債務の履行状況に関する情報の提供義務\n458の3|2|期限の利益の喪失に関する情報の提供義務\n459|2|委託を受けた保証人の求償権\n459の2|2|委託を受けた保証人の事前の求償権\n462|2|委託を受けない保証人の求償権\n463|1|通知を怠った保証人の求償の制限\n465の2|3|個人根保証契約の保証人の責任等\n465の6|2|公正証書の作成と保証の効力\n465の10|2|契約締結時の情報の提供義務\n466|3|債権の譲渡性・譲渡制限の意思表示\n466の2|2|譲渡制限の意思表示がされた債権に係る債務者の供託\n466の3|1|譲渡制限の意思表示と差押え\n466の4|2|譲渡制限の意思表示がされた債権の差押え\n466の5|2|預金債権又は貯金債権に係る譲渡制限の意思表示\n466の6|2|将来債権の譲渡性\n467|3|債権の譲渡の対抗要件\n468|3|債権の譲渡における債務者の抗弁\n469|3|債権の譲渡における相殺権\n472|2|免責的債務引受の要件及び効果\n472の2|1|免責的債務引受における引受人の抗弁等\n470|2|併存的債務引受の要件及び効果\n473|2|弁済\n474|3|第三者の弁済\n477|1|預金又は貯金の口座に対する払込みによる弁済\n478|3|受領権者としての外観を有する者に対する弁済\n481|1|差押えを受けた債権の第三債務者の弁済\n482|2|代物弁済\n483|1|特定物の現状による引渡し\n484|2|弁済の場所及び時間\n485|1|弁済の費用\n486|1|受取証書の交付請求等\n487|1|債権証書の返還請求\n488|2|同種の給付を目的とする数個の債務がある場合の充当\n491|1|元本、利息及び費用を支払うべき場合の充当\n492|2|弁済の提供の効果\n493|3|弁済の提供の方法\n494|3|供託\n499|3|弁済による代位の要件\n500|2|弁済による代位の対抗要件\n501|3|弁済による代位の効果\n502|2|一部弁済による代位\n505|3|相殺の要件等\n506|2|相殺の方法及び効力\n508|2|時効により消滅した債権を自働債権とする相殺\n509|3|不法行為等により生じた債権を受働債権とする相殺の禁止\n510|2|差押禁止債権を受働債権とする相殺の禁止\n511|3|差押えを受けた債権を受働債権とする相殺の禁止\n513|2|更改\n519|2|免除\n520|2|混同\n521|3|契約の締結及び内容の自由\n522|3|契約の成立と方式\n523|2|承諾の期間の定めのある申込み\n525|2|承諾の期間の定めのない申込み\n526|1|申込者の死亡等\n528|1|申込みに変更を加えた承諾\n533|3|同時履行の抗弁\n536|3|債務者の危険負担等\n537|3|第三者のためにする契約\n538|1|第三者の権利の確定\n539の2|2|契約上の地位の移転\n540|2|解除権の行使\n541|3|催告による解除\n542|3|催告によらない解除\n543|3|債権者の責めに帰すべき事由による場合\n545|3|解除の効果\n546|1|契約の解除と同時履行\n548|1|解除権者の故意による目的物の損傷等による解除権の消滅\n548の2|3|定型約款の合意\n548の3|2|定型約款の内容の表示\n548の4|2|定型約款の変更\n549|2|贈与\n550|3|書面によらない贈与の解除\n551|2|贈与者の引渡義務等\n553|1|負担付贈与\n554|1|死因贈与\n555|2|売買\n556|1|売買の一方の予約\n557|3|手付\n560|1|権利移転の対抗要件に係る売主の義務\n561|2|他人の権利の売買における売主の義務\n562|3|買主の追完請求権\n563|3|買主の代金減額請求権\n564|2|買主の損害賠償請求及び解除権の行使\n565|2|移転した権利が契約の内容に適合しない場合\n566|3|目的物の種類又は品質に関する担保責任の期間の制限\n567|3|目的物の滅失等についての危険の移転\n568|1|競売における担保責任等\n569|1|債権の売主の担保責任\n570|2|抵当権等がある場合の買主による費用の償還請求\n572|2|担保責任を負わない旨の特約\n573|1|代金の支払期限\n575|2|果実の帰属及び代金の利息の支払\n576|2|権利を取得することができない等のおそれがある場合の買主による代金の支払の拒絶\n579|2|買戻しの特約\n586|1|交換\n587|2|消費貸借\n587の2|2|書面でする消費貸借等\n589|2|利息\n591|2|返還の時期\n593|2|使用貸借\n597|1|期間満了等による使用貸借の終了\n598|1|使用貸借の解除\n601|3|賃貸借\n602|2|短期賃貸借\n604|2|賃貸借の存続期間\n605|3|不動産賃貸借の対抗力\n605の2|3|不動産の賃貸人たる地位の移転\n605の3|2|合意による不動産の賃貸人たる地位の移転\n605の4|2|不動産の賃借人による妨害の停止の請求等\n606|2|賃貸人による修繕等\n607の2|2|賃借人による修繕\n608|3|賃借人による費用の償還請求\n609|1|減収による賃料の減額請求\n611|2|賃借物の一部滅失等による賃料の減額等\n612|3|賃借権の譲渡及び転貸の制限\n613|3|転貸の効果\n615|1|賃借人の通知義務\n616の2|3|賃借物の全部滅失等による賃貸借の終了\n617|2|期間の定めのない賃貸借の解約の申入れ\n618|1|期間の定めのある賃貸借の解約をする権利の留保\n619|2|賃貸借の更新の推定等\n620|2|賃貸借の解除の効力\n621|3|賃借人の原状回復義務\n622の2|3|敷金\n623|1|雇用\n632|2|請負\n634|2|注文者が受ける利益の割合に応じた報酬\n636|2|請負人の担保責任の制限\n637|3|目的物の種類又は品質に関する担保責任の期間の制限\n641|2|注文者による契約の解除\n642|1|注文者についての破産手続の開始による解除\n643|2|委任\n644|3|受任者の注意義務\n644の2|2|復受任者の選任等\n645|2|受任者による報告\n646|2|受任者による受取物の引渡し等\n647|1|受任者の金銭の消費についての責任\n648|3|受任者の報酬\n648の2|2|成果等に対する報酬\n650|2|受任者による費用等の償還請求等\n651|3|委任の解除\n652|1|委任の解除の効力\n653|3|委任の終了事由\n654|1|委任の終了後の処分\n655|1|委任の終了の対抗要件\n657|1|寄託\n658|1|寄託物の使用及び第三者による保管\n659|2|無報酬の受寄者の注意義務\n662|1|寄託者による返還請求等\n665の2|2|混合寄託\n666|2|消費寄託\n667|2|組合契約\n668|1|組合財産の共有\n675|2|組合の債権者の権利の行為\n676|2|組合員の持分の処分及び組合財産の分割\n677|1|組合財産に対する組合員の債権者の権利の行使\n678|2|組合員の脱退\n680の2|1|脱退した組合員の責任等\n686|1|終身定期金契約\n695|2|和解\n696|3|和解の効力\n697|3|事務管理\n698|2|緊急事務管理\n699|1|管理者の通知義務\n700|1|管理者による事務管理の継続\n701|1|委任の規定の準用\n702|3|管理者による費用の償還請求等\n703|3|不当利得の返還義務\n704|3|悪意の受益者の返還義務等\n705|3|債務の不存在を知ってした弁済\n706|1|期限前の弁済\n707|2|他人の債務の弁済\n708|3|不法原因給付\n709|3|不法行為による損害賠償\n710|3|財産以外の損害の賠償\n711|3|近親者に対する損害の賠償\n712|3|責任能力（未成年者）\n713|2|責任能力（精神上の障害）\n714|3|責任無能力者の監督義務者等の責任\n715|3|使用者等の責任\n716|1|注文者の責任\n717|3|土地の工作物等の占有者及び所有者の責任\n718|2|動物の占有者等の責任\n719|3|共同不法行為者の責任\n720|3|正当防衛及び緊急避難\n721|1|損害賠償請求権に関する胎児の権利能力\n722|3|損害賠償の方法、中間利息の控除及び過失相殺\n723|2|名誉毀損における原状回復\n724|3|不法行為による損害賠償請求権の消滅時効\n724の2|3|人の生命又は身体を害する不法行為による損害賠償請求権の消滅時効の特例",
+"405AC0000000088": "1|3|目的等\n2|3|定義（処分・申請・不利益処分・行政指導・届出・命令等）\n3|2|適用除外\n4|1|国の機関等に対する処分等の適用除外\n5|3|審査基準\n6|3|標準処理期間\n7|3|申請に対する審査、応答\n8|3|理由の提示\n9|2|情報の提供\n10|2|公聴会の開催等\n11|1|複数の行政庁が関与する処分\n12|3|処分の基準\n13|3|不利益処分をしようとする場合の手続\n14|3|不利益処分の理由の提示\n15|3|聴聞の通知の方式\n16|2|代理人\n17|2|参加人\n18|3|文書等の閲覧\n19|2|聴聞の主宰\n20|3|聴聞の期日における審理の方式\n21|1|陳述書等の提出\n22|1|続行期日の指定\n23|2|当事者の不出頭等の場合における聴聞の終結\n24|2|聴聞調書及び報告書\n25|2|聴聞の再開\n26|2|聴聞を経てされる不利益処分の決定\n27|3|審査請求の制限\n28|1|役員等の解任等を命ずる不利益処分の特例\n29|2|弁明の機会の付与の方式\n30|2|弁明の機会の付与の通知の方式\n31|2|聴聞に関する手続の準用\n32|3|行政指導の一般原則\n33|3|申請に関連する行政指導\n34|3|許認可等の権限に関連する行政指導\n35|3|行政指導の方式\n36|2|複数の者を対象とする行政指導\n36の2|3|行政指導の中止等の求め（申出は相手方のみ）\n36の3|3|処分等の求め（何人も申出可）\n37|3|届出\n38|2|命令等を定める場合の一般原則\n39|3|意見公募手続\n40|2|意見公募手続の特例\n41|1|意見公募手続の周知等\n42|2|提出意見の考慮\n43|2|結果の公示等\n44|1|準用\n45|1|公示の方法\n46|2|地方公共団体の措置（努力義務）",
+"426AC0000000068": "1|3|目的等\n2|3|処分についての審査請求\n3|3|不作為についての審査請求\n4|3|審査請求をすべき行政庁\n5|3|再調査の請求\n6|3|再審査請求\n7|2|適用除外\n8|1|特別の不服申立ての制度\n9|3|審理員\n10|1|法人でない社団又は財団の審査請求\n11|2|総代\n12|2|代理人による審査請求\n13|2|参加人\n14|1|裁決をする権限を有しなくなった場合の措置\n15|1|審理手続の承継\n16|2|標準審理期間\n17|2|審理員となるべき者の名簿\n18|3|審査請求期間（知った日の翌日から三月／処分の日の翌日から一年）\n19|2|審査請求書の提出\n20|1|口頭による審査請求\n21|2|処分庁等を経由する審査請求\n22|3|誤った教示をした場合の救済\n23|1|審査請求書の補正\n24|2|審理手続を経ないでする却下裁決\n25|3|執行停止（審査請求は執行不停止が原則）\n26|1|執行停止の取消し\n27|2|審査請求の取下げ\n28|2|争点及び証拠の事前整理\n29|3|弁明書の提出\n30|2|反論書等の提出\n31|3|口頭意見陳述\n32|2|証拠書類等の提出\n33|1|物件の提出要求\n34|1|参考人の陳述及び鑑定の要求\n35|1|検証\n36|1|審理関係人への質問\n37|1|審理手続の計画的遂行\n38|2|提出書類等の閲覧等\n39|1|審理手続の併合又は分離\n40|1|審理員による執行停止の意見書の提出\n41|2|審理手続の終結\n42|3|審理員意見書\n43|3|行政不服審査会等への諮問\n44|2|裁決の時期\n45|3|処分についての審査請求の却下又は棄却（事情裁決）\n46|3|処分についての審査請求の認容\n47|2|認容（事実上の行為）\n48|3|不利益変更の禁止\n49|3|不作為についての審査請求の裁決\n50|2|裁決の方式\n51|2|裁決の効力発生\n52|3|裁決の拘束力\n53|1|証拠書類等の返還\n54|3|再調査の請求期間\n55|1|誤った教示をした場合の救済\n56|2|再調査の請求と審査請求との関係\n57|1|三月後の教示\n58|2|却下又は棄却の決定\n59|2|認容の決定\n60|1|決定の方式\n61|1|審査請求に関する規定の準用\n62|3|再審査請求期間\n63|1|裁決書等の送付\n64|2|再審査請求の却下又は棄却の裁決\n65|2|再審査請求の認容の裁決\n66|1|審査請求に関する規定の準用\n67|2|行政不服審査会の設置及び組織\n68|1|委員\n69|1|専門委員\n70|1|合議体\n71|1|事務局\n72|1|審査会の調査権限\n73|1|意見の陳述\n74|1|主張書面等の提出\n75|1|委員による調査手続\n76|1|提出資料の閲覧等\n77|2|答申書の送付等\n78|1|審査会の調査審議の手続\n79|1|政令への委任\n80|2|地方公共団体に置かれる機関\n81|2|地方公共団体における不服申立ての制度\n82|3|不服申立てをすべき行政庁等の教示\n83|3|教示をしなかった場合の不服申立て\n84|1|情報の提供\n85|1|公表\n86|1|政令への委任\n87|1|罰則",
+"337AC0000000139": "1|2|この法律の趣旨\n2|3|行政事件訴訟の類型（抗告・当事者・民衆・機関）\n3|3|抗告訴訟の定義（六類型）\n4|3|当事者訴訟（形式的・実質的）\n5|2|民衆訴訟\n6|2|機関訴訟\n7|2|この法律に定めがない事項（民訴法の準用）\n8|3|処分の取消しの訴えと審査請求との関係（自由選択主義）\n9|3|原告適格（第2項の考慮事項）\n10|2|取消しの理由の制限（原処分主義）\n11|3|被告適格等\n12|2|管轄\n13|1|関連請求に係る訴訟の移送\n14|3|出訴期間（知った日から六箇月／処分の日から一年）\n15|2|被告を誤った訴えの救済\n16|1|請求の客観的併合\n17|1|共同訴訟\n18|1|第三者による請求の追加的併合\n19|1|原告による請求の追加的併合\n20|1|前条の場合の特例\n21|2|国又は公共団体に対する請求への訴えの変更\n22|2|第三者の訴訟参加\n23|2|行政庁の訴訟参加\n23の2|1|釈明処分の特則\n24|2|職権証拠調べ\n25|3|執行停止（執行不停止が原則）\n26|1|事情変更による執行停止の取消し\n27|3|内閣総理大臣の異議\n28|1|執行停止等の管轄裁判所\n29|1|執行停止に関する規定の準用\n30|3|裁量処分の取消し\n31|3|特別の事情による請求の棄却（事情判決）\n32|3|取消判決等の効力（第三者効）\n33|3|取消判決の拘束力\n34|2|第三者の再審の訴え\n35|1|訴訟費用の裁判の効力\n36|3|無効等確認の訴えの原告適格\n37|2|不作為の違法確認の訴えの原告適格\n37の2|3|義務付けの訴えの要件等（非申請型）\n37の3|3|義務付けの訴えの要件等（申請型）\n37の4|3|差止めの訴えの要件\n37の5|3|仮の義務付け及び仮の差止め\n38|2|取消訴訟に関する規定の準用\n39|1|出訴の通知\n40|1|出訴期間の定めのある当事者訴訟\n41|1|抗告訴訟に関する規定の準用\n42|1|訴えの提起\n43|1|抗告訴訟又は当事者訴訟に関する規定の準用\n44|2|仮処分の排除\n45|2|処分の効力等を争点とする訴訟\n46|3|取消訴訟等の提起に関する事項の教示",
+"322AC0000000125": "1|3|公権力の行使に基づく損害の賠償責任\n2|3|公の営造物の設置又は管理の瑕疵\n3|3|費用負担者の責任と求償\n4|2|民法の適用\n5|2|他の法律の適用\n6|2|相互保証主義"
+};
+
+const WEIGHTS = (() => {
+  const map = new Map();
+  for (const [lawId, raw] of Object.entries(WEIGHT_SOURCE)) {
+    for (const line of raw.split("\n")) {
+      const c = line.split("|");
+      if (c.length < 3) continue;
+      const w = parseInt(c[1], 10);
+      if (!Number.isFinite(w)) continue;
+      map.set(lawId + "|" + c[0].replace(/の/g, "_"), {weight:w, note:c.slice(2).join("|")});
+    }
+  }
+  return map;
+})();
+const weightOf = (lawId, num) =>
+  WEIGHTS.get(lawId + "|" + String(num).replace(/の/g, "_")) || null;
+
+/* ══════════════════════════════════════════════
+   条文の取得（e-Gov 法令API）
+   ══════════════════════════════════════════════ */
+const artForms = n => {
+  const t = String(n).trim();
+  const out = [t];
+  if (t.includes("_")) out.push(t.replace(/_/g, "の"));
+  if (t.includes("の")) out.push(t.replace(/の/g, "_"));
+  return [...new Set(out)];
+};
+
+const txt = el => (el ? el.textContent.trim() : "");
+const kids = (el, tag) => el ? [...el.children].filter(c => c.tagName === tag) : [];
+const kid  = (el, tag) => kids(el, tag)[0] || null;
+const deep = (el, tag) => el ? [...el.getElementsByTagName(tag)] : [];
+
+/** 号の本文などで欄が複数あれば区切りを保つ（「〜のとき」／「聴聞」） */
+function sentenceText(el) {
+  if (!el) return "";
+  const cols = kids(el, "Column");
+  if (cols.length >= 2) {
+    return cols.map(c => deep(c, "Sentence").map(txt).join(""))
+               .filter(Boolean).join("　→　");
+  }
+  return deep(el, "Sentence").map(txt).join("");
+}
+
+function parseParagraph(p) {
+  const num = txt(kid(p, "ParagraphNum"));
+  const text = sentenceText(kid(p, "ParagraphSentence"));
+  const items = [];
+  for (const it of kids(p, "Item")) {
+    const t = txt(kid(it, "ItemTitle"));
+    const body = sentenceText(kid(it, "ItemSentence"));
+    if (body) items.push(t ? `${t}　${body}` : body);
+    for (const s1 of kids(it, "Subitem1")) {
+      const t1 = txt(kid(s1, "Subitem1Title"));
+      const b1 = sentenceText(kid(s1, "Subitem1Sentence"));
+      if (b1) items.push("　" + (t1 ? `${t1}　${b1}` : b1));
+      for (const s2 of kids(s1, "Subitem2")) {
+        const t2 = txt(kid(s2, "Subitem2Title"));
+        const b2 = sentenceText(kid(s2, "Subitem2Sentence"));
+        if (b2) items.push("　　" + (t2 ? `${t2}　${b2}` : b2));
+      }
+    }
+  }
+  return (text || items.length) ? {num, text, items} : null;
+}
+
+function renderArticle(article, replaceIndex, replacement) {
+  const lines = [];
+  article.paragraphs.forEach((p, i) => {
+    const body = (i === replaceIndex && replacement != null) ? replacement : p.text;
+    if (body) lines.push((p.num ? p.num + "　" : "") + body);
+    p.items.forEach(x => lines.push("　" + x));
+  });
+  return lines.join("\n");
+}
+const fullText = a => renderArticle(a, -1, null);
+
+async function fetchArticle(law, num) {
+  let last = null;
+  for (const form of artForms(num)) {
+    const url = `https://laws.e-gov.go.jp/api/1/articles;lawId=${law.id};article=${encodeURIComponent(form)};`;
+    let raw;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) { last = new Error(`e-Gov が HTTP ${res.status} を返しました`); continue; }
+      raw = await res.text();
+    } catch (e) {
+      // ここに来るのは通信そのものが遮られた場合（file:// で開いた／回線断／CORS）
+      throw new Error("e-Gov に接続できませんでした（" + e.message + "）");
+    }
+    try {
+      const doc = new DOMParser().parseFromString(raw, "application/xml");
+      if (doc.querySelector("parsererror")) { last = new Error("XML を解釈できませんでした"); continue; }
+      const code = txt(doc.querySelector("Code"));
+      if (code !== "0") { last = new Error(`e-Gov に第${form}条が見つかりません`); continue; }
+
+      // 応答の ApplData には <Article>177</Article> のように
+      // 要求内容を反射した同名の要素が入る。本文は LawContents の中だけを見る。
+      const contents = doc.querySelector("LawContents");
+      if (!contents) { last = new Error("本文の位置を特定できませんでした"); continue; }
+
+      const art = kid(contents, "Article");
+      const scope = art || contents;
+
+      let paragraphs = kids(scope, "Paragraph").map(parseParagraph).filter(Boolean);
+      if (!paragraphs.length) {
+        paragraphs = deep(scope, "Paragraph").map(parseParagraph).filter(Boolean);
+      }
+      if (!paragraphs.length) { last = new Error("条文の本文が空でした"); continue; }
+
+      return {
+        lawName: law.name,
+        caption: txt(kid(art, "ArticleCaption")),
+        title:   txt(kid(art, "ArticleTitle")) || `第${form}条`,
+        paragraphs,
+      };
+    } catch (e) { last = new Error("解析に失敗しました（" + e.message + "）"); }
+  }
+  throw last || new Error("取得できませんでした");
+}
+
+/** 編・章・節ごとの条文一覧（本則のみ） */
+async function fetchIndex(law) {
+  const res = await fetch(`https://laws.e-gov.go.jp/api/1/lawdata/${law.id}`);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const doc = new DOMParser().parseFromString(await res.text(), "application/xml");
+  const main = doc.querySelector("MainProvision");
+  if (!main) throw new Error("本則が見つかりません");
+
+  const groups = new Map();
+  const seen = new Set();
+  const titleOf = (el, tag) => txt(kid(el, tag)).replace(/\u3000/g, " ");
+
+  for (const a of main.querySelectorAll("Article")) {
+    if (a.getAttribute("Delete") === "true") continue;
+    const num = a.getAttribute("Num");
+    if (!num || seen.has(num)) continue;
+    seen.add(num);
+
+    const parts = [];
+    let node = a.parentElement;
+    while (node && node !== main) {
+      if (node.tagName === "Part")    parts.unshift(titleOf(node, "PartTitle"));
+      if (node.tagName === "Chapter") parts.unshift(titleOf(node, "ChapterTitle"));
+      if (node.tagName === "Section") parts.unshift(titleOf(node, "SectionTitle"));
+      node = node.parentElement;
+    }
+    const path = parts.filter(Boolean).join(" ＞ ") || "全体";
+    const key = law.id + "|" + path;
+    if (!groups.has(key)) groups.set(key, {lawId:law.id, lawName:law.name, law, path, articles:[]});
+    groups.get(key).articles.push(num);
+  }
+  return [...groups.values()].filter(g => g.articles.length);
+}
+
+/* ══════════════════════════════════════════════
+   条文の切り分けと、空欄にしてよい部分の判定
+   ══════════════════════════════════════════════ */
+const OPEN  = new Set(["（","(","「","『","【","〔"]);
+const CLOSE = new Set(["）",")","」","』","】","〕"]);
+
+/** 括弧の外にある読点・句点で分割する（区切り記号は保持） */
+function splitSegments(text) {
+  const segs = []; let cur = "", depth = 0;
+  for (const ch of text) {
+    if (OPEN.has(ch))  { depth++; cur += ch; continue; }
+    if (CLOSE.has(ch)) { if (depth > 0) depth--; cur += ch; continue; }
+    if ((ch === "、" || ch === "。") && depth === 0) { segs.push({body:cur, d:ch}); cur = ""; }
+    else cur += ch;
+  }
+  if (cur) segs.push({body:cur, d:""});
+  return segs;
+}
+const joinSegments = segs => segs.map(s => s.body + s.d).join("");
+
+/** 各ブロックが、その文の末尾から何番目か */
+function endOffsets(segs) {
+  const out = new Array(segs.length).fill(0);
+  let start = 0;
+  segs.forEach((s, i) => {
+    if (s.d === "。" || i === segs.length - 1) {
+      for (let j = start; j <= i; j++) out[j] = i - j;
+      start = i + 1;
+    }
+  });
+  return out;
+}
+/** 各ブロックが、その文の先頭かどうか */
+function sentenceHeads(segs) {
+  const out = []; let head = true;
+  segs.forEach(s => { out.push(head); head = (s.d === "。"); });
+  return out;
+}
+
+const hasBracket = s => [...s].some(c => OPEN.has(c) || CLOSE.has(c));
+const strippedLength = t => {
+  let n = 0, d = 0;
+  for (const ch of t) {
+    if (OPEN.has(ch)) { d++; continue; }
+    if (CLOSE.has(ch)) { if (d>0) d--; continue; }
+    if (d === 0) n++;
+  }
+  return n;
+};
+
+/** 「第十五条第一項」のような他条文への絶対参照を含むか */
+function hasArticleRef(s) {
+  const kan = "一二三四五六七八九十百千", unit = "条項号";
+  const c = [...s];
+  for (let i = 0; i < c.length; i++) {
+    if (c[i] !== "第") continue;
+    let j = i + 1;
+    while (j < c.length && kan.includes(c[j])) j++;
+    if (j > i + 1 && j < c.length && unit.includes(c[j])) return true;
+  }
+  return false;
+}
+
+/* 単独では問題にならない語 */
+const CONNECTIVES = new Set(["ただし","また","かつ","及び","並びに","若しくは","又は",
+  "この場合において","前項の場合において","この場合","前項の場合",
+  "次項において同じ","以下同じ","この限りでない"]);
+
+/* 含んでいたら除外する導入句 */
+const BOILERPLATE = ["次に掲げる","次の各号","次のとおり","次に定める",
+  "前項の規定","前二項の規定","前三項の規定","前各項の規定",
+  "前条の規定","前二条の規定","前三条の規定","前四条の規定","前五条の規定",
+  "前各条の規定","次条の規定","前節の規定","前款の規定","前章の規定",
+  "この節の規定","この款の規定",
+  "この場合において","以下この条において","以下この款において",
+  "以下この節において","以下この章において","次項において",
+  "この法律において","この項において"];
+
+/* これで始まるブロックは他条項を指しているだけ */
+const REL_PREFIX = ["前項","前二項","前三項","前各項","次項",
+  "前条","前二条","前三条","前各条","次条",
+  "前号","前二号","前三号","前各号","次号",
+  "前節","前款","前章","前編","同項","同条","同号",
+  "この項","この条","この節","この款"];
+
+/* 条文の節や句はひらがなで終わる。漢字止まりは列挙項目とみなす */
+const endsWithNoun = b => {
+  if (!b) return true;
+  const code = b.charCodeAt(b.length - 1);
+  return !(code >= 0x3041 && code <= 0x3096);
+};
+
+/* 文頭の短い主語（「家庭裁判所は」「行政庁は」） */
+const COND_END = ["ときは","ときには","場合は","場合には","場合において","ときにおいて","限りは"];
+function isBareSubject(b, isHead) {
+  if (!isHead || b.length > 8) return false;
+  if (COND_END.some(e => b.endsWith(e))) return false;
+  return b.endsWith("は") || b.endsWith("が");
+}
+
+function isBlankCandidate(b, isHead = false) {
+  if (isBareSubject(b, isHead)) return false;
+  if (b.length < 5 || b.length > 60) return false;
+  if (hasBracket(b)) return false;
+  if (CONNECTIVES.has(b)) return false;
+  if (BOILERPLATE.some(p => b.includes(p))) return false;
+  if (hasArticleRef(b)) return false;
+  if (REL_PREFIX.some(p => b.startsWith(p))) return false;
+  if (endsWithNoun(b)) return false;
+  return true;
+}
+
+/* 効果を示す言い回し */
+const EFFECT = ["ことができる","なければならない","ものとする","することを要しない",
+  "責任を負う","義務を負う","を負う","を有する",
+  "効力を生じない","無効とする","妨げない","対抗することができない",
+  "取得する","消滅する","推定する","みなす","適用しない","準用する",
+  "目的とする","趣旨とする","図るものとする"];
+
+/* その条文でしか出てこない、あるいは繰り返し問われる文言 */
+const KEYPHRASE = ["事理を弁識する能力","常況","一時回復","医師二人以上","立会い",
+  "同一の錯誤","重大な過失","善意でかつ過失がない","善意の第三者",
+  "知り、又は知ることができた","過失がないとき","悪意",
+  "信義に従い誠実","権利の濫用","公共の福祉","公の秩序又は善良の風俗",
+  "社会通念に照らして","責めに帰することができない事由",
+  "所有の意思をもって","平穏に","公然と","完成猶予","更新",
+  "通常生ずべき損害","特別の事情によって生じた損害","予見すべきであった",
+  "現に利益を受けている限度",
+  "遅滞なく","直ちに","速やかに","あらかじめ","相当の期間を定めて",
+  "正当な理由","やむを得ない事由","不法な原因のために","法律上の原因なく",
+  "簡易迅速かつ公正な手続","公正の確保と透明性の向上","権利利益の救済",
+  "適正な運営","違法又は不当","重大な損害","償うことのできない損害",
+  "緊急の必要","法律上の利益を有する者","公共の福祉に重大な影響"];
+
+function positionWeight(offset, body) {
+  let w = offset === 0 ? 8 : offset === 1 ? 4 : offset === 2 ? 2 : 1;
+  if (EFFECT.some(m => body.includes(m))) w *= 2;
+  if (KEYPHRASE.some(k => body.includes(k))) w *= 10;
+  return w;
+}
+
+function weightedPick(items, weights) {
+  const total = weights.reduce((a, b) => a + b, 0);
+  if (total <= 0) return items[Math.floor(Math.random() * items.length)];
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) { r -= weights[i]; if (r < 0) return items[i]; }
+  return items[items.length - 1];
+}
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/* ══════════════════════════════════════════════
+   採点：最長共通部分列にもとづく一致率
+   ══════════════════════════════════════════════ */
+const DROP = new Set(["、","。","　"," ","\n","（","）","(",")"]);
+const normalize = s => [...s].filter(c => !DROP.has(c)).join("");
+
+function similarity(a, b) {
+  const x = [...normalize(a)], y = [...normalize(b)];
+  if (!x.length || !y.length) return 0;
+  let prev = new Array(y.length + 1).fill(0);
+  for (let i = 1; i <= x.length; i++) {
+    const cur = new Array(y.length + 1).fill(0);
+    for (let j = 1; j <= y.length; j++) {
+      cur[j] = x[i-1] === y[j-1] ? prev[j-1] + 1 : Math.max(prev[j], cur[j-1]);
+    }
+    prev = cur;
+  }
+  return prev[y.length] * 2 / (x.length + y.length);
+}
+
+/* ══════════════════════════════════════════════
+   Wikibooks コンメンタール（判例・解説）
+   ══════════════════════════════════════════════ */
+const wikiPage = (law, num) =>
+  law.wiki ? `${law.wiki}第${String(num).replace(/_/g, "の")}条` : null;
+const wikiURL = (law, num) => {
+  const p = wikiPage(law, num);
+  return p ? "https://ja.wikibooks.org/wiki/" + encodeURIComponent(p) : null;
+};
+
+async function fetchWikitext(law, num) {
+  const page = wikiPage(law, num);
+  if (!page) return null;
+  const url = "https://ja.wikibooks.org/w/api.php?action=parse&page="
+    + encodeURIComponent(page)
+    + "&prop=wikitext&format=json&formatversion=2&redirects=1&origin=*";
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (json.error || !json.parse) return null;
+  return json.parse.wikitext || null;
+}
+
+/** wiki記法を落として読める文にする */
+function wclean(text) {
+  let s = text;
+  s = s.replace(/\[\[([^\]|]*)\|([^\]]*)\]\]/g, "$2");
+  s = s.replace(/\[\[([^\]]*)\]\]/g, "$1");
+  s = s.replace(/\[https?:\/\/\S+\s+([^\]]*)\]/g, "$1");
+  s = s.replace(/\[https?:\/\/\S+\]/g, "");
+  s = s.replace(/\{\{[^}]*\}\}/g, "");
+  s = s.replace(/'{2,}/g, "");
+  s = s.replace(/<br\s*\/?>/gi, " ");
+  s = s.replace(/<[^>]*>/g, "");
+  s = s.replace(/ {2,}/g, " ").trim();
+  s = s.replace(/^[;:*#\s\u3000]+/, "");
+  return s.trim();
+}
+const firstURL = line => {
+  const m = line.match(/https?:\/\/[^\s\]|}]+/);
+  return m ? m[0] : null;
+};
+
+/** 判例の一覧 */
+function parsePrecedents(wikitext) {
+  const out = [];
+  let inSec = false, pending = null, pendingLink = null;
+  const flush = () => { if (pending) out.push({title:pending, summary:"", link:pendingLink}); pending = null; pendingLink = null; };
+
+  for (const raw of wikitext.split("\n")) {
+    const line = raw.trim();
+    if (line.startsWith("=")) {
+      const h = line.replace(/=/g, "").trim();
+      if (h.includes("判例")) inSec = true;
+      else if (inSec) { flush(); inSec = false; }
+      continue;
+    }
+    if (!inSec || !line) continue;
+
+    if (/^([#*]:|::)/.test(line)) {
+      const body = wclean(line.replace(/^([#*]:|::)/, ""));
+      if (!body) continue;
+      if (pending) { out.push({title:pending, summary:body, link:pendingLink}); pending = null; pendingLink = null; }
+      else if (out.length) {
+        const last = out.pop();
+        out.push({...last, summary: last.summary ? last.summary + " " + body : body});
+      }
+      continue;
+    }
+    if (/^[#*]/.test(line)) {
+      flush();
+      const rest = line.slice(1);
+      const body = wclean(rest);
+      if (body) { pending = body; pendingLink = firstURL(rest); }
+    }
+  }
+  flush();
+  return out.filter(p => p.title);
+}
+
+/** 解説欄から判例法理を取り出す */
+const STOP_HEADINGS = ["判例","参照条文","脚注","外部リンク","関連","前条","次条","条文"];
+const CONCLUSIONS = ["必要である","必要とされる","必要としない","要しない",
+  "対抗できる","対抗できない","対抗することができる","対抗することができない",
+  "できる","できない","とされる","とされている",
+  "あたる","当たる","あたらない","当たらない",
+  "有効","無効","認められる","認められない",
+  "成立する","成立しない","消滅する","解される","解されている"];
+
+const isRuleStatement = t =>
+  t.length >= 15 && t.length <= 120 &&
+  CONCLUSIONS.some(c => t.includes(c)) &&
+  !/書きかけ|加筆|編集/.test(t);
+
+/** 行内で用語と説明を分ける「:」（リンクやURLの中では切らない） */
+function topLevelColon(text) {
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === "[" || ch === "{") depth++;
+    else if (ch === "]" || ch === "}") { if (depth > 0) depth--; }
+    else if (ch === ":" && depth === 0) {
+      if (/https?$/.test(text.slice(0, i))) continue;
+      return i;
+    }
+  }
+  return -1;
+}
+
+function parseDoctrines(wikitext) {
+  const out = [];
+  let inSec = false, heading = "", term = "";
+
+  for (const raw of wikitext.split("\n")) {
+    const line = raw.trim();
+
+    if (line.startsWith("=")) {
+      const level = (line.match(/^=+/) || [""])[0].length;
+      const title = wclean(line.replace(/=/g, "").trim());
+      if (title.includes("解説")) { inSec = true; heading = ""; term = ""; continue; }
+      if (inSec && level <= 2 && STOP_HEADINGS.some(s => title.includes(s))) { inSec = false; continue; }
+      if (inSec) { heading = title; term = ""; }
+      continue;
+    }
+    if (!inSec || !line) continue;
+
+    if (line.startsWith(";")) {
+      const rest = line.slice(1);
+      const c = topLevelColon(rest);
+      if (c >= 0) {
+        const t = wclean(rest.slice(0, c)), body = wclean(rest.slice(c + 1));
+        if (isRuleStatement(body)) out.push({heading, term:t, statement:body});
+        term = "";
+      } else term = wclean(rest);
+      continue;
+    }
+    if (line.startsWith(":")) {
+      const body = wclean(line.slice(1));
+      if (isRuleStatement(body)) out.push({heading, term, statement:body});
+      term = "";
+      continue;
+    }
+    if (/^[*#]/.test(line)) {
+      const body = wclean(line.slice(1));
+      if (isRuleStatement(body)) out.push({heading, term:"", statement:body});
+      continue;
+    }
+    if (/^[{|<]/.test(line)) continue;
+
+    for (const sen of wclean(line).split("。")) {
+      const s = sen.trim();
+      if (s && isRuleStatement(s + "。")) out.push({heading, term:"", statement:s + "。"});
+    }
+  }
+  return out;
+}
+
+/* ══════════════════════════════════════════════
+   出題の組み立て
+   ══════════════════════════════════════════════ */
+const mark = (answer, showHint) =>
+  `<span class="blank">＿＿＿＿＿${showHint ? `（${answer.length}字）` : ""}</span>`;
+
+/** 参照だけの項（準用規定など）は使わない */
+function isReferenceOnlyParagraph(t) {
+  if (!(hasArticleRef(t) || REL_PREFIX.some(p => t.startsWith(p)))) return false;
+  return ["準用する","読み替える","適用する","適用しない","例による"]
+    .some(m => t.includes(m)) && strippedLength(t) < 120;
+}
+
+function isPoorQuestion(article, mode) {
+  const text = fullText(article);
+  if (text.length < 25) return true;
+  if (/準用する|読み替える/.test(text) && strippedLength(text) < 80) return true;
+  if (mode === "blank" || mode === "descriptive") {
+    return !article.paragraphs.some(p => {
+      if (isReferenceOnlyParagraph(p.text)) return false;
+      const segs = splitSegments(p.text), heads = sentenceHeads(segs);
+      return segs.some((s, i) => isBlankCandidate(s.body, heads[i]));
+    });
+  }
+  return false;
+}
+
+function makeBlank(article, showHint, emphasizeEnding) {
+  const order = article.paragraphs.map((_, i) => i).sort(() => Math.random() - .5);
+  for (const pi of order) {
+    const text = article.paragraphs[pi].text;
+    if (!text || isReferenceOnlyParagraph(text)) continue;
+    const segs = splitSegments(text);
+    if (segs.length < 2) continue;
+    const heads = sentenceHeads(segs), offs = endOffsets(segs);
+    const cand = segs.map((s, i) => i).filter(i => isBlankCandidate(segs[i].body, heads[i]));
+    if (!cand.length) continue;
+
+    const idx = emphasizeEnding
+      ? weightedPick(cand, cand.map(i => positionWeight(offs[i], segs[i].body)))
+      : pick(cand);
+
+    const answer = segs[idx].body;
+    const shown = segs.map((s, i) => i === idx ? {body:mark(answer, showHint), d:s.d} : s);
+    return {mode:"blank", answer, question:joinSegments(shown), paragraphIndex:pi};
+  }
+  return null;
+}
+
+function makeDescriptive(article, showHint) {
+  for (const pi of article.paragraphs.map((_, i) => i).sort(() => Math.random() - .5)) {
+    const text = article.paragraphs[pi].text;
+    if (!text || isReferenceOnlyParagraph(text)) continue;
+    const segs = splitSegments(text), offs = endOffsets(segs);
+    const spans = [];
+    for (let end = 0; end < segs.length; end++) {
+      if (offs[end] !== 0) continue;
+      for (let start = end; start >= 0; start--) {
+        const bodies = segs.slice(start, end + 1).map(s => s.body);
+        const joined = bodies.join("、");
+        if (joined.length > 55) break;
+        const ok = bodies.every(b => b && !hasBracket(b) && !hasArticleRef(b) && !CONNECTIVES.has(b)
+                   && !BOILERPLATE.some(p => b.includes(p)))
+                   && !REL_PREFIX.some(p => bodies[0].startsWith(p));
+        if (joined.length >= 30 && ok) spans.push([start, end]);
+        if (start > 0 && segs[start - 1].d === "。") break;
+      }
+    }
+    if (!spans.length) continue;
+    const [s0, s1] = pick(spans);
+    const answer = segs.slice(s0, s1 + 1).map(s => s.body).join("、");
+    const shown = [...segs.slice(0, s0), {body:mark(answer, showHint), d:segs[s1].d}, ...segs.slice(s1 + 1)];
+    return {mode:"descriptive", answer, question:joinSegments(shown), paragraphIndex:pi};
+  }
+  return makeBlank(article, showHint, true);
+}
+
+function makeDoctrine(d, showHint) {
+  const segs = splitSegments(d.statement);
+  const heads = sentenceHeads(segs), offs = endOffsets(segs);
+  const cand = segs.map((s, i) => i).filter(i => isBlankCandidate(segs[i].body, heads[i]));
+  if (!cand.length) return null;
+  const idx = weightedPick(cand, cand.map(i => positionWeight(offs[i], segs[i].body)));
+  const answer = segs[idx].body;
+  const shown = segs.map((s, i) => i === idx ? {body:mark(answer, showHint), d:s.d} : s);
+  const topic = [d.heading, d.term].filter(Boolean).join("／");
+  return {mode:"doctrine", answer, topic, question:joinSegments(shown), paragraphIndex:-1};
+}
+
+/* ══════════════════════════════════════════════
+   画面
+   ══════════════════════════════════════════════ */
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+const state = {
+  source: "range", mode: "blank", weight: "normal",
+  scopeIndex: 0, fieldIndex: -1,
+  showHint: true, emphasizeEnding: true,
+  index: new Map(),      // lawId -> groups
+  drill: null, article: null, ref: null, revealed: false,
+};
+
+const MODE_NOTE = {
+  blank:       "条文の一部を空欄にします。",
+  descriptive: "本試験と同じ40字前後になるよう、文末までをまとめて空欄にします。",
+  doctrine:    "Wikibooks の解説欄から判例法理を出題します。編集者による記述のため、条文と違い誤りを含む可能性があります。",
+  recall:      "条見出しだけを頼りに、条文全体を書き起こします。",
+};
+
+/* ── 初期化 ── */
+function initControls() {
+  $("#scope").innerHTML = SCOPES.map((s, i) => `<option value="${i}">${esc(s.name)}</option>`).join("");
+  $("#manualLaw").innerHTML = Object.values(LAWS).map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join("");
+
+  bindSeg("#segSource", v => { state.source = v; syncPanes(); });
+  bindSeg("#segMode",   v => { state.mode = v; syncPanes(); });
+  bindSeg("#segWeight", v => { state.weight = v; });
+
+  bindSwitch("#optHint",   v => { state.showHint = v; });
+  bindSwitch("#optEnding", v => { state.emphasizeEnding = v; });
+
+  $("#scope").addEventListener("change", e => {
+    state.scopeIndex = +e.target.value; state.fieldIndex = -1; syncFields();
+  });
+  $("#field").addEventListener("change", e => { state.fieldIndex = +e.target.value; });
+  $("#loadScope").addEventListener("click", loadScope);
+  $("#draw").addEventListener("click", draw);
+
+  $("#start").addEventListener("click", () => {
+    document.body.classList.remove("covered");
+    window.scrollTo(0, 0);
+    $("#cover").classList.add("hide");
+    setTimeout(() => { const c = $("#cover"); if (c) c.remove(); }, 500);
+  });
+  syncPanes(); syncFields();
+}
+
+function bindSeg(sel, fn) {
+  const root = $(sel);
+  root.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    [...root.children].forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    fn(b.dataset.v);
+  });
+}
+function bindSwitch(sel, fn) {
+  const b = $(sel).querySelector(".sw");
+  b.addEventListener("click", () => {
+    const on = b.getAttribute("aria-pressed") !== "true";
+    b.setAttribute("aria-pressed", String(on)); fn(on);
+  });
+}
+
+function syncPanes() {
+  $("#paneRange").hidden  = state.source !== "range";
+  $("#paneNumber").hidden = state.source === "range";
+  $("#modeNote").textContent = MODE_NOTE[state.mode];
+  $("#modeNote").className = "hint" + (state.mode === "doctrine" ? " warn" : "");
+  $("#optHint").hidden   = state.mode === "recall";
+  $("#optEnding").hidden = state.mode !== "blank";
+  $("#endingNote").hidden = state.mode !== "blank";
+}
+
+const currentScope = () => SCOPES[state.scopeIndex];
+const scopeReady = () => currentScope().laws.every(l => state.index.has(l.id));
+const availableFields = () => currentScope().laws.flatMap(l => state.index.get(l.id) || []);
+
+function syncFields() {
+  const ready = scopeReady();
+  $("#loadScope").hidden = ready;
+  $("#fieldRow").hidden = !ready;
+  if (!ready) return;
+  const fields = availableFields();
+  const total = fields.reduce((a, g) => a + g.articles.length, 0);
+  $("#field").innerHTML =
+    `<option value="-1">範囲全体（${total.toLocaleString()}条）</option>` +
+    fields.map((g, i) => `<option value="${i}">${esc(g.lawName + " ＞ " + g.path)}（${g.articles.length}）</option>`).join("");
+  $("#field").value = String(state.fieldIndex);
+}
+
+function setStatus(html) { $("#status").innerHTML = html; }
+
+async function loadScope() {
+  const scope = currentScope();
+  $("#loadScope").disabled = true;
+  try {
+    for (const [i, law] of scope.laws.entries()) {
+      if (state.index.has(law.id)) continue;
+      setStatus(`<p class="msg info"><span class="spin"></span> ${esc(law.name)}を読み込み中…（${i+1}/${scope.laws.length}）</p>`);
+      state.index.set(law.id, await fetchIndex(law));
+    }
+    setStatus("");
+    syncFields();
+  } catch (e) {
+    setStatus(`<p class="msg err">読み込めませんでした。${esc(e.message)}<br>通信を確認して、もう一度お試しください。</p>`);
+  } finally {
+    $("#loadScope").disabled = false;
+  }
+}
+
+function candidateRefs() {
+  const scope = currentScope();
+  if (state.fieldIndex >= 0) {
+    const g = availableFields()[state.fieldIndex];
+    return g ? g.articles.map(n => ({law:g.law, num:n})) : [];
+  }
+  const out = [];
+  for (const law of scope.laws) {
+    for (const g of state.index.get(law.id) || []) {
+      for (const n of g.articles) out.push({law, num:n});
+    }
+  }
+  return out;
+}
+
+const MULTIPLIER = {flat:[1,1,1,1], normal:[1,2,4,7], focused:[1,3,9,20]};
+function drawRef(refs) {
+  const m = MULTIPLIER[state.weight];
+  return weightedPick(refs, refs.map(r => {
+    const w = weightOf(r.law.id, r.num);
+    return m[Math.min(Math.max(w ? w.weight : 0, 0), 3)];
+  }));
+}
+
+async function draw() {
+  $("#draw").disabled = true;
+  state.revealed = false;
+  $("#cases").hidden = true; $("#cases").innerHTML = "";
+  setStatus(`<p class="msg info"><span class="spin"></span> 条文を取得中…</p>`);
+
+  try {
+    if (state.source === "number") {
+      const id = $("#manualLaw").value;
+      const law = Object.values(LAWS).find(l => l.id === id);
+      await present({law, num: $("#articleNo").value.trim()}, true);
+      return;
+    }
+    let ref_;
+    const refs = candidateRefs();
+    if (!refs.length) {
+      setStatus(`<p class="msg err">先に「この範囲を読み込む」を押してください。</p>`);
+      return;
+    }
+    const reasons = [];
+    for (let i = 0; i < 8; i++) {
+      const r = await present(ref_ = drawRef(refs), false);
+      if (r.ok) return;
+      if (r.reason) reasons.push(r.reason);
+      await new Promise(res => setTimeout(res, 120));   // e-Gov に連続でぶつけない
+    }
+    setStatus(`<p class="msg err">出題できる条文が見つかりませんでした。試した条文と理由：<br>`
+      + reasons.map(x => "・" + esc(x)).join("<br>") + `</p>`);
+  } catch (e) {
+    setStatus(`<p class="msg err">${esc(e.message)}</p>`);
+  } finally {
+    $("#draw").disabled = false;
+  }
+}
+
+/** 1条文を出題する。{ok, reason} を返す */
+async function present(ref, forced) {
+  const tag = `${ref.law.name} 第${String(ref.num).replace(/_/g,"の")}条`;
+  let article = null;
+  try { article = await fetchArticle(ref.law, ref.num); }
+  catch (e) {
+    if (forced) {
+      setStatus(`<p class="msg err">${esc(tag)}を取得できませんでした。<br>${esc(e.message)}</p>`);
+      return {ok:true};
+    }
+    if (/接続できません/.test(e.message)) throw e;   // 通信断は引き直しても無駄
+    return {ok:false, reason:`${tag}：${e.message}`};
+  }
+
+  let drill = null;
+  if (state.mode === "doctrine") {
+    let list = [];
+    try { const w = await fetchWikitext(ref.law, ref.num); if (w) list = parseDoctrines(w); } catch (e) {}
+    if (!list.length) {
+      if (forced) { setStatus(`<p class="msg info">${esc(tag)}には解説欄の記述がありませんでした。</p>`); return {ok:true}; }
+      return {ok:false, reason:`${tag}：解説欄に記述なし`};
+    }
+    drill = makeDoctrine(pick(list), state.showHint);
+    if (!drill) return {ok:forced, reason:`${tag}：解説から空欄を作れず`};
+  } else {
+    if (!forced && isPoorQuestion(article, state.mode)) {
+      return {ok:false, reason:`${tag}：出題に適さない条文`};
+    }
+    if (state.mode === "blank")            drill = makeBlank(article, state.showHint, state.emphasizeEnding);
+    else if (state.mode === "descriptive") drill = makeDescriptive(article, state.showHint);
+    else drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1};
+    if (!drill) {
+      if (!forced) return {ok:false, reason:`${tag}：空欄を作れず`};
+      drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1};
+    }
+  }
+
+  state.article = article; state.ref = ref; state.drill = drill;
+  setStatus(""); renderSheet();
+  return {ok:true};
+}
+
+/* ── 出題面の描画 ── */
+function renderSheet() {
+  const {drill, article, ref} = state;
+  const w = weightOf(ref.law.id, ref.num);
+  const stars = w ? "★".repeat(Math.min(w.weight, 3)) : "";
+  const isDoctrine = drill.mode === "doctrine";
+
+  const body = isDoctrine
+    ? renderArticle(article, -1, null)   // 判例法理では条文を参照として添える
+    : renderArticle(article, drill.paragraphIndex, drill.question);
+
+  let html = `
+    <div class="artline">
+      <span class="artno">${esc(ref.law.name)}　${esc(article.title)}</span>
+      ${article.caption ? `<span class="artcap">${esc(article.caption)}</span>` : ""}
+    </div>
+    <div class="meta">
+      ${stars ? `<span class="stars">${stars}</span><span>${esc(w.note)}</span>` : `<span>重要度は未設定</span>`}
+    </div>`;
+
+  if (isDoctrine) {
+    html += `<p class="label">空欄を埋めてください</p>
+      <div class="jobun">${drill.topic ? `<span class="topic">${esc(drill.topic)}</span>` : ""}${drill.question}</div>
+      <p class="label" style="margin-top:16px">参照条文</p>
+      <div class="ref">${esc(body)}</div>`;
+  } else if (drill.mode === "recall") {
+    html += `<p class="label">条文を書き起こしてください</p>
+      <div class="jobun">${esc(drill.question)}</div>`;
+  } else {
+    html += `<p class="label">空欄を埋めてください</p>
+      <div class="jobun">${body}</div>`;
+  }
+
+  const target = drill.mode === "descriptive" ? 40 : Math.max(20, Math.min(60, drill.answer.length + 8));
+  html += `
+    <div class="answer">
+      <textarea id="input" rows="3" placeholder="解答を入力"></textarea>
+      <div class="grid" id="grid" data-target="${target}"></div>
+      <div class="count"><span>解答欄は${target}マス</span><span><b id="count">0</b> 字</span></div>
+      <button class="primary" id="grade" style="margin-top:16px">採点する</button>
+    </div>
+    <div id="result"></div>`;
+
+  const sheet = $("#sheet");
+  sheet.innerHTML = html;
+  sheet.hidden = false;
+
+  const ta = $("#input");
+  ta.addEventListener("input", updateGrid);
+  ta.focus();
+  updateGrid();
+  $("#grade").addEventListener("click", grade);
+  sheet.scrollIntoView({behavior:"smooth", block:"start"});
+
+  // 判例はオプションの直前に置く。採点前でも参照できる。
+  const box = $("#cases");
+  box.hidden = false;
+  box.innerHTML = `<button class="ghost" id="cases-btn">この条文の判例を見る</button>`;
+  $("#cases-btn").addEventListener("click", loadCases);
+}
+
+/** 解答用紙のマス目を書き換える */
+function updateGrid() {
+  const ta = $("#input"), grid = $("#grid");
+  if (!ta || !grid) return;
+  const target = +grid.dataset.target;
+  const chars = [...ta.value.replace(/\n/g, "")];
+  const cells = Math.max(target, Math.ceil(chars.length / 20) * 20);
+  let html = "";
+  for (let i = 0; i < cells; i++) {
+    const over = i >= target;
+    const tenth = (i % 20) === 9 ? " tenth" : "";
+    html += `<div class="cell${over ? " over" : ""}${tenth}">${chars[i] ? esc(chars[i]) : ""}</div>`;
+  }
+  grid.innerHTML = html;
+  const c = $("#count");
+  c.textContent = chars.length;
+  c.className = chars.length > target ? "over" : "";
+}
+
+/* ── 採点 ── */
+function grade() {
+  const {drill, article, ref} = state;
+  const input = $("#input").value;
+  const pct = Math.round(similarity(input, drill.answer) * 100);
+  const cls = pct >= 80 ? "hi" : pct >= 50 ? "mid" : "lo";
+  state.revealed = true;
+
+  let html = `
+    <div class="score"><span class="label" style="margin:0">一致率</span>
+      <span class="n ${cls}">${pct}<span style="font-size:18px">%</span></span></div>
+    <p class="label">${drill.mode === "recall" ? "正解" : "空欄の正解"}</p>
+    <div class="answerbox">${esc(drill.answer)}</div>`;
+
+  if (drill.mode !== "doctrine" && drill.mode !== "recall") {
+    html += `<p class="label" style="margin-top:16px">条文全体</p>
+      <div class="ref">${esc(fullText(article))}</div>`;
+  }
+  html += `
+    <div style="margin-top:18px">
+      <button class="primary" id="next">もう一問</button>
+    </div>`;
+
+  $("#result").innerHTML = html;
+  $("#grade").disabled = true;
+  $("#next").addEventListener("click", draw);
+  $("#result").scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+/* ── 判例 ── */
+async function loadCases() {
+  const {ref} = state;
+  const box = $("#cases");
+  box.hidden = false;
+  box.innerHTML = `<p class="msg info"><span class="spin"></span> 判例を取得中…</p>`;
+  try {
+    const w = await fetchWikitext(ref.law, ref.num);
+    const list = w ? parsePrecedents(w) : [];
+    const url = wikiURL(ref.law, ref.num);
+    if (!list.length) {
+      box.innerHTML = `<p class="msg info">この条文には判例の記載がありませんでした。`
+        + (url ? ` <a href="${url}" target="_blank" rel="noopener">Wikibooksで開く</a>` : "") + `</p>`;
+      return;
+    }
+    box.innerHTML = `<p class="eyebrow">判例</p>` + list.map(p => `
+      <div class="case">
+        ${p.link ? `<a href="${p.link}" target="_blank" rel="noopener">${esc(p.title)} ↗</a>`
+                 : `<span style="font-size:14.5px;font-weight:600">${esc(p.title)}</span>`}
+        ${p.summary ? `<p>${esc(p.summary)}</p>` : ""}
+      </div>`).join("")
+      + (url ? `<button class="ghost" onclick="window.open('${url}','_blank')">Wikibooks でこの条文の解説を開く</button>
+               <p class="hint">出典：Wikibooks コンメンタール（CC BY-SA）</p>` : "");
+    box.scrollIntoView({behavior:"smooth", block:"nearest"});
+  } catch (e) {
+    box.innerHTML = `<p class="msg err">判例を取得できませんでした。${esc(e.message)}</p>`;
+  }
+}
+
+initControls();
+</script>
+
+
+</body></html>
