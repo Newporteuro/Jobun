@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0051)file:///C:/Users/kenki/Downloads/jobun-drill_6.html -->
+<!-- saved from url=(0051)file:///C:/Users/kenki/Downloads/jobun-drill_7.html -->
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -818,7 +818,15 @@ function isPoorQuestion(article, mode) {
   return false;
 }
 
-function makeBlank(article, showHint, emphasizeEnding) {
+/** 前回この条文で空欄にした答えを除いた候補を返す（全部消える場合はそのまま） */
+function avoidRepeat(cand, segs, key) {
+  const prev = state.lastBlank.get(key);
+  if (!prev) return cand;
+  const filtered = cand.filter(i => segs[i].body !== prev);
+  return filtered.length ? filtered : cand;
+}
+
+function makeBlank(article, showHint, emphasizeEnding, key) {
   const order = article.paragraphs.map((_, i) => i).sort(() => Math.random() - .5);
   for (const pi of order) {
     const text = article.paragraphs[pi].text;
@@ -826,21 +834,23 @@ function makeBlank(article, showHint, emphasizeEnding) {
     const segs = splitSegments(text);
     if (segs.length < 2) continue;
     const heads = sentenceHeads(segs), offs = endOffsets(segs);
-    const cand = segs.map((s, i) => i).filter(i => isBlankCandidate(segs[i].body, heads[i]));
+    let cand = segs.map((s, i) => i).filter(i => isBlankCandidate(segs[i].body, heads[i]));
     if (!cand.length) continue;
+    cand = avoidRepeat(cand, segs, key);
 
     const idx = emphasizeEnding
       ? weightedPick(cand, cand.map(i => positionWeight(offs[i], segs[i].body)))
       : pick(cand);
 
     const answer = segs[idx].body;
+    if (key) state.lastBlank.set(key, answer);
     const shown = segs.map((s, i) => i === idx ? {body:mark(answer, showHint), d:s.d} : s);
     return {mode:"blank", answer, question:joinSegments(shown), paragraphIndex:pi};
   }
   return null;
 }
 
-function makeDescriptive(article, showHint) {
+function makeDescriptive(article, showHint, key) {
   for (const pi of article.paragraphs.map((_, i) => i).sort(() => Math.random() - .5)) {
     const text = article.paragraphs[pi].text;
     if (!text || isReferenceOnlyParagraph(text)) continue;
@@ -860,21 +870,26 @@ function makeDescriptive(article, showHint) {
       }
     }
     if (!spans.length) continue;
-    const [s0, s1] = pick(spans);
+    const prev = key ? state.lastBlank.get(key) : null;
+    const fresh = spans.filter(([a, b]) => segs.slice(a, b + 1).map(s => s.body).join("、") !== prev);
+    const [s0, s1] = pick(fresh.length ? fresh : spans);
     const answer = segs.slice(s0, s1 + 1).map(s => s.body).join("、");
+    if (key) state.lastBlank.set(key, answer);
     const shown = [...segs.slice(0, s0), {body:mark(answer, showHint), d:segs[s1].d}, ...segs.slice(s1 + 1)];
     return {mode:"descriptive", answer, question:joinSegments(shown), paragraphIndex:pi};
   }
-  return makeBlank(article, showHint, true);
+  return makeBlank(article, showHint, true, key);
 }
 
-function makeDoctrine(d, showHint) {
+function makeDoctrine(d, showHint, key) {
   const segs = splitSegments(d.statement);
   const heads = sentenceHeads(segs), offs = endOffsets(segs);
-  const cand = segs.map((s, i) => i).filter(i => isBlankCandidate(segs[i].body, heads[i]));
+  let cand = segs.map((s, i) => i).filter(i => isBlankCandidate(segs[i].body, heads[i]));
   if (!cand.length) return null;
+  cand = avoidRepeat(cand, segs, key);
   const idx = weightedPick(cand, cand.map(i => positionWeight(offs[i], segs[i].body)));
   const answer = segs[idx].body;
+  if (key) state.lastBlank.set(key, answer);
   const shown = segs.map((s, i) => i === idx ? {body:mark(answer, showHint), d:s.d} : s);
   const topic = [d.heading, d.term].filter(Boolean).join("／");
   return {mode:"doctrine", answer, topic, question:joinSegments(shown), paragraphIndex:-1};
@@ -892,7 +907,17 @@ const state = {
   showHint: true, emphasizeEnding: true,
   index: new Map(),      // lawId -> groups
   drill: null, article: null, ref: null, revealed: false,
+  recent: [],            // 直近に出した条文（繰り返しを避ける）
+  lastDoctrine: null,
+  lastBlank: new Map(),  // 条文ごとに前回どこを空欄にしたか
 };
+
+const RECENT_LIMIT = 40;
+const refKey = ref => ref.law.id + "|" + ref.num;
+function noteDrawn(ref) {
+  const k = refKey(ref);
+  state.recent = [k, ...state.recent.filter(x => x !== k)].slice(0, RECENT_LIMIT);
+}
 
 const MODE_NOTE = {
   blank:       "条文の一部を空欄にします。",
@@ -1010,10 +1035,14 @@ function candidateRefs() {
 const MULTIPLIER = {flat:[1,1,1,1], normal:[1,2,4,7], focused:[1,3,9,20]};
 function drawRef(refs) {
   const m = MULTIPLIER[state.weight];
-  return weightedPick(refs, refs.map(r => {
+  const recent = new Set(state.recent);
+  // 直近に出した条文は 1/25 に減らす。候補が少ない分野でも詰まらないよう 0 にはしない。
+  const weights = refs.map(r => {
     const w = weightOf(r.law.id, r.num);
-    return m[Math.min(Math.max(w ? w.weight : 0, 0), 3)];
-  }));
+    const base = m[Math.min(Math.max(w ? w.weight : 0, 0), 3)];
+    return recent.has(refKey(r)) ? base / 25 : base;
+  });
+  return weightedPick(refs, weights);
 }
 
 async function draw() {
@@ -1073,14 +1102,17 @@ async function present(ref, forced) {
       if (forced) { setStatus(`<p class="msg info">${esc(tag)}には解説欄の記述がありませんでした。</p>`); return {ok:true}; }
       return {ok:false, reason:`${tag}：解説欄に記述なし`};
     }
-    drill = makeDoctrine(pick(list), state.showHint);
+    const fresh = list.filter(x => x.statement !== state.lastDoctrine);
+    const chosen = pick(fresh.length ? fresh : list);
+    state.lastDoctrine = chosen.statement;
+    drill = makeDoctrine(chosen, state.showHint, refKey(ref));
     if (!drill) return {ok:forced, reason:`${tag}：解説から空欄を作れず`};
   } else {
     if (!forced && isPoorQuestion(article, state.mode)) {
       return {ok:false, reason:`${tag}：出題に適さない条文`};
     }
-    if (state.mode === "blank")            drill = makeBlank(article, state.showHint, state.emphasizeEnding);
-    else if (state.mode === "descriptive") drill = makeDescriptive(article, state.showHint);
+    if (state.mode === "blank")            drill = makeBlank(article, state.showHint, state.emphasizeEnding, refKey(ref));
+    else if (state.mode === "descriptive") drill = makeDescriptive(article, state.showHint, refKey(ref));
     else drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1};
     if (!drill) {
       if (!forced) return {ok:false, reason:`${tag}：空欄を作れず`};
@@ -1089,6 +1121,7 @@ async function present(ref, forced) {
   }
 
   state.article = article; state.ref = ref; state.drill = drill;
+  noteDrawn(ref);
   setStatus(""); renderSheet();
   return {ok:true};
 }
