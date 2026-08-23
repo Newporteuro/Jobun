@@ -5,7 +5,7 @@
    問題を組み立てる。採点の一致率もここ。
    通信もしないし、画面にも触らない ── 入力と出力だけの世界。
    ══════════════════════════════════════════════ */
-import { fullText } from "./sources.js?v=20260823c";   // ?v= は ui.js の VERSION と揃える
+import { fullText } from "./sources.js?v=20260823d";   // ?v= は ui.js の VERSION と揃える
 
 /* ══════════════════════════════════════════════
    条文の切り分けと、空欄にしてよい部分の判定
@@ -325,13 +325,28 @@ export function makeDescriptive(article, showHint, key) {
   return null;
 }
 
+/* 採点キーワードは正規表現として扱う。「訴えを提起」と「訴訟を提起」のような
+   表記のゆれを列挙で潰すのは無理があるので、1つの式で吸収する。
+   正規表現として壊れている場合は、そのまま文字列として照合する。 */
+const matcherCache = new Map();
+function matcher(w) {
+  let re = matcherCache.get(w);
+  if (!re) {
+    try { re = new RegExp(w); }
+    catch (e) { re = new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")); }
+    matcherCache.set(w, re);
+  }
+  return re;
+}
+
 /** 事例記述の要素採点。本試験と同じく要素ごとの部分点で採る */
 export function scoreCase(input, points) {
   const text = normalize(input);
   const detail = points.map(p => ({
     label: p.label,
+    example: p.example || "",
     point: p.point,
-    hit: p.words.some(w => text.includes(normalize(w))),
+    hit: p.words.some(w => matcher(w).test(text)),
   }));
   const full = points.reduce((a, p) => a + p.point, 0);
   const earned = detail.reduce((a, d) => a + (d.hit ? d.point : 0), 0);
