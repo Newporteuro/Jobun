@@ -7,18 +7,18 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260823f";
+export const VERSION = "20260823h";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260823f";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260823h";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260823f";
+} from "./sources.js?v=20260823h";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260823f";
-import { CASES } from "./cases.js?v=20260823f";
+} from "./drill.js?v=20260823h";
+import { CASES } from "./cases.js?v=20260823h";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -480,9 +480,44 @@ function gradeCase(input) {
       <div class="ref">${esc(fullText(state.article))}</div>`;
   }
   html += `
-    <p class="hint">キーワードの有無による機械採点です。要素が入っていても文意が通らなければ本試験では得点になりません。解答例と読み比べてください。</p>`;
+    <p class="hint">キーワードの有無による機械採点です。要素が入っていても文意が通らなければ本試験では得点になりません。解答例と読み比べてください。</p>
+    <button class="ghost" id="copylog" style="margin-top:10px">この結果を記録用にコピー</button>
+    <p class="hint" id="copymsg" hidden></p>`;
 
+  // 採点のとりこぼしを報告してもらうための控え。書き写さずに済むよう組み立てておく
+  state.lastLog = buildLog(c, s, input);
   showResult(html);
+}
+
+/** 記録ファイルに貼り付ける一件分のテキスト */
+function buildLog(c, s, input) {
+  const stamp = new Date().toLocaleString("ja-JP");
+  return [
+    "────────────────",
+    `${stamp}　版 ${VERSION}`,
+    `[${c.id}] ${c.topic}`,
+    `設問: ${c.question}`,
+    `私の解答(${[...input.replace(/\n/g, "")].length}字): ${input.trim()}`,
+    `得点: ${s.earned}/${s.full}`,
+    ...s.detail.map(d => `  ${d.hit ? "○" : "×"} ${d.label} (${d.hit ? d.point : 0}/${d.point})`),
+    `解答例: ${c.answer}`,
+    "コメント: ",
+    "",
+  ].join("\n");
+}
+
+/** クリップボードへ。HTTPS でない場合などのために古い方法も残す */
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+  const ta = document.createElement("textarea");
+  ta.value = t;
+  ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) {}
+  ta.remove();
+  return ok;
 }
 
 /** 採点結果を表示して「もう一問」を配線する */
@@ -494,6 +529,19 @@ function showResult(html) {
   $("#result").innerHTML = html;
   $("#grade").disabled = true;
   $("#next").addEventListener("click", draw);
+
+  const copy = $("#copylog");
+  if (copy) {
+    copy.addEventListener("click", async () => {
+      const ok = await copyText(state.lastLog || "");
+      const msg = $("#copymsg");
+      msg.hidden = false;
+      msg.className = "hint" + (ok ? "" : " warn");
+      msg.textContent = ok
+        ? "コピーしました。記録ファイルに貼り付けてください。"
+        : "コピーできませんでした。下の解答例ごと選択して手動でコピーしてください。";
+    });
+  }
   $("#result").scrollIntoView({behavior:"smooth", block:"nearest"});
 }
 
