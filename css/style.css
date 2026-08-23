@@ -80,6 +80,7 @@ header.masthead{
   border-right:1px solid var(--hairline);
 }
 .seg button:last-child{border-right:0}
+.seg.five button{font-size:12px;padding:10px 2px;letter-spacing:-.01em}
 .seg button[aria-pressed="true"]{background:var(--ai);color:var(--paper);font-weight:600}
 select,input[type=text]{
   font-family:var(--gothic);font-size:14px;color:var(--sumi);
@@ -156,6 +157,27 @@ textarea:focus{outline:2px solid var(--ai);outline-offset:-1px}
   font-family:var(--mincho);font-size:16px;line-height:1.95;
   border:1px solid var(--wakaba);border-left-width:3px;padding:13px 15px;background:#F1F5F0;
 }
+/* ── 事例記述 ───────────────────── */
+.facts{
+  font-family:var(--mincho);font-size:15.5px;line-height:2.0;
+  background:var(--paper-raised);border-left:3px solid var(--sumi);
+  padding:16px 18px;
+}
+.ask{
+  font-family:var(--mincho);font-size:16px;line-height:1.95;
+  border-top:1px solid var(--hairline);margin:14px 0 0;padding:14px 0 0;
+}
+.topicline{font-family:var(--mincho);font-size:13px;letter-spacing:.14em;color:var(--ai);margin:0 0 8px}
+.points{margin:14px 0 0;border-top:1px solid var(--hairline)}
+.point{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--hairline);font-size:13.5px}
+.point .mk{font-size:15px;flex:0 0 auto;width:1.2em;text-align:center}
+.point.hit .mk{color:var(--wakaba)}
+.point.miss .mk{color:var(--shu)}
+.point .lb{flex:1}
+.point.miss .lb{color:var(--sumi-soft)}
+.point .pt{font-variant-numeric:tabular-nums;color:var(--sumi-soft);font-size:12px;flex:0 0 auto}
+.commentary{font-size:13px;line-height:1.95;color:var(--sumi-soft);
+  background:var(--paper-raised);border-left:2px solid var(--hairline);padding:12px 14px;margin:14px 0 0}
 .case{border:1px solid var(--hairline);border-left:3px solid var(--ai);padding:12px 14px;margin:0 0 9px;background:var(--paper-raised)}
 .case a{color:var(--ai);font-weight:600;text-decoration:none;font-size:14.5px}
 .case a:hover{text-decoration:underline}

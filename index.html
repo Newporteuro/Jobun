@@ -27,7 +27,7 @@
   </header>
 
   <section class="console">
-    <p class="eyebrow">出題元</p>
+    <p class="eyebrow" id="sourceLabel">出題元</p>
     <div class="seg" id="segSource">
       <button data-v="range" aria-pressed="true">範囲から</button>
       <button data-v="number" aria-pressed="false">条番号を指定</button>
@@ -52,9 +52,10 @@
     </div>
 
     <p class="eyebrow" style="margin-top:18px">形式</p>
-    <div class="seg" id="segMode">
+    <div class="seg five" id="segMode">
       <button data-v="blank" aria-pressed="true">穴埋め</button>
-      <button data-v="descriptive" aria-pressed="false">記述式40字</button>
+      <button data-v="descriptive" aria-pressed="false">条文40字</button>
+      <button data-v="case" aria-pressed="false">事例記述</button>
       <button data-v="doctrine" aria-pressed="false">判例法理</button>
       <button data-v="recall" aria-pressed="false">全文再現</button>
     </div>

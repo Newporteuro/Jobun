@@ -194,7 +194,8 @@ export function isPoorQuestion(article, mode) {
   const text = fullText(article);
   if (text.length < 25) return true;
   if (/準用する|読み替える/.test(text) && strippedLength(text) < 80) return true;
-  if (mode === "blank" || mode === "descriptive") {
+  if (mode === "descriptive") return !hasDescriptive(article);
+  if (mode === "blank") {
     return !article.paragraphs.some(p => {
       if (isReferenceOnlyParagraph(p.text)) return false;
       const segs = splitSegments(p.text), heads = sentenceHeads(segs);
@@ -240,35 +241,101 @@ export function makeBlank(article, showHint, emphasizeEnding, key) {
   return null;
 }
 
+/* ── 記述式（条文の効果部分を問う） ──────────
+
+   本試験の記述式は「〜の場合、Xはどうなるか」を40字程度で書かせる。
+   条文をそのまま長く空欄にすると、条件節ごと消えて手がかりが無くなり、
+   実質「全文再現」になってしまう。そこで次を満たす範囲だけを空欄にする。
+
+   ・文末で終わること（効果部分を答えさせる）
+   ・文の先頭からは始めないこと（条件節と主語を手がかりとして必ず残す）
+   ・残る手がかりが十分な長さであること
+   ・答えが40字程度に収まること
+   ────────────────────────────── */
+const DESC_TARGET = 40;   // 本試験の字数
+const DESC_MIN = 28, DESC_MAX = 50;
+const DESC_NEAR = 6;      // 40字±6 を優先して選ぶ
+const PREFIX_MIN = 12;    // 空欄の前に残す手がかりの最小字数
+
+/** その文のうち、空欄の前に残る文字数 */
+function prefixLength(segs, start) {
+  let n = 0;
+  for (let i = start - 1; i >= 0; i--) {
+    if (segs[i].d === "。") break;   // 前の文まで遡らない
+    n += segs[i].body.length;
+  }
+  return n;
+}
+
+/** 記述式に使える範囲を [開始, 終了, 字数] で返す */
+function descriptiveSpans(segs, heads, offs) {
+  const spans = [];
+  for (let end = 0; end < segs.length; end++) {
+    if (offs[end] !== 0) continue;              // 文末で終わる範囲だけ
+    for (let start = end; start >= 0; start--) {
+      const bodies = segs.slice(start, end + 1).map(s => s.body);
+      const joined = bodies.join("、");
+      if (joined.length > DESC_MAX) break;
+      const ok = bodies.every(b => b && !hasBracket(b) && !hasArticleRef(b) && !CONNECTIVES.has(b)
+                 && !BOILERPLATE.some(p => b.includes(p)))
+                 && !REL_PREFIX.some(p => bodies[0].startsWith(p))
+                 && !isBareSubject(bodies[0], heads[start]);   // 主語だけを問わない
+      if (ok && joined.length >= DESC_MIN
+          && !heads[start]                                     // 文頭からは空欄にしない
+          && prefixLength(segs, start) >= PREFIX_MIN) {
+        spans.push([start, end, joined.length]);
+      }
+      if (start > 0 && segs[start - 1].d === "。") break;
+    }
+  }
+  return spans;
+}
+
+/** その条文から40字程度の記述式が作れるか */
+export function hasDescriptive(article) {
+  return article.paragraphs.some(p => {
+    if (!p.text || isReferenceOnlyParagraph(p.text)) return false;
+    const segs = splitSegments(p.text);
+    return descriptiveSpans(segs, sentenceHeads(segs), endOffsets(segs)).length > 0;
+  });
+}
+
 export function makeDescriptive(article, showHint, key) {
   for (const pi of article.paragraphs.map((_, i) => i).sort(() => Math.random() - .5)) {
     const text = article.paragraphs[pi].text;
     if (!text || isReferenceOnlyParagraph(text)) continue;
-    const segs = splitSegments(text), offs = endOffsets(segs);
-    const spans = [];
-    for (let end = 0; end < segs.length; end++) {
-      if (offs[end] !== 0) continue;
-      for (let start = end; start >= 0; start--) {
-        const bodies = segs.slice(start, end + 1).map(s => s.body);
-        const joined = bodies.join("、");
-        if (joined.length > 55) break;
-        const ok = bodies.every(b => b && !hasBracket(b) && !hasArticleRef(b) && !CONNECTIVES.has(b)
-                   && !BOILERPLATE.some(p => b.includes(p)))
-                   && !REL_PREFIX.some(p => bodies[0].startsWith(p));
-        if (joined.length >= 30 && ok) spans.push([start, end]);
-        if (start > 0 && segs[start - 1].d === "。") break;
-      }
-    }
+    const segs = splitSegments(text), offs = endOffsets(segs), heads = sentenceHeads(segs);
+    const spans = descriptiveSpans(segs, heads, offs);
     if (!spans.length) continue;
+
+    // 40字に近いものを優先し、無ければ全候補から選ぶ
+    const near = spans.filter(s => Math.abs(s[2] - DESC_TARGET) <= DESC_NEAR);
+    let pool = near.length ? near : spans;
     const prev = key ? lastBlank.get(key) : null;
-    const fresh = spans.filter(([a, b]) => segs.slice(a, b + 1).map(s => s.body).join("、") !== prev);
-    const [s0, s1] = pick(fresh.length ? fresh : spans);
+    const fresh = pool.filter(([a, b]) => segs.slice(a, b + 1).map(s => s.body).join("、") !== prev);
+    if (fresh.length) pool = fresh;
+
+    const [s0, s1] = pick(pool);
     const answer = segs.slice(s0, s1 + 1).map(s => s.body).join("、");
     if (key) lastBlank.set(key, answer);
     const shown = [...segs.slice(0, s0), {body:mark(answer, showHint), d:segs[s1].d}, ...segs.slice(s1 + 1)];
     return {mode:"descriptive", answer, question:joinSegments(shown), paragraphIndex:pi};
   }
-  return makeBlank(article, showHint, true, key);
+  // 40字の問題が作れない条文は、呼び出し側で引き直してもらう
+  return null;
+}
+
+/** 事例記述の要素採点。本試験と同じく要素ごとの部分点で採る */
+export function scoreCase(input, points) {
+  const text = normalize(input);
+  const detail = points.map(p => ({
+    label: p.label,
+    point: p.point,
+    hit: p.words.some(w => text.includes(normalize(w))),
+  }));
+  const full = points.reduce((a, p) => a + p.point, 0);
+  const earned = detail.reduce((a, d) => a + (d.hit ? d.point : 0), 0);
+  return {detail, earned, full, pct: full ? Math.round(earned / full * 100) : 0};
 }
 
 export function makeDoctrine(d, showHint, key) {

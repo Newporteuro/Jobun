@@ -11,8 +11,9 @@ import {
 } from "./sources.js";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
-  isPoorQuestion, similarity, weightedPick, pick,
+  isPoorQuestion, similarity, scoreCase, weightedPick, pick,
 } from "./drill.js";
+import { CASES } from "./cases.js";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -25,6 +26,8 @@ const state = {
   drill: null, article: null, ref: null, revealed: false,
   recent: [],            // 直近に出した条文（繰り返しを避ける）
   lastDoctrine: null,
+  kase: null,            // 出題中の事例問題
+  recentCases: [],       // 直近に出した事例問題のid
 };
 
 const RECENT_LIMIT = 40;
@@ -36,7 +39,8 @@ function noteDrawn(ref) {
 
 const MODE_NOTE = {
   blank:       "条文の一部を空欄にします。",
-  descriptive: "本試験と同じ40字前後になるよう、文末までをまとめて空欄にします。",
+  descriptive: "条件節を残し、条文の効果部分を40字程度で書かせます。",
+  case:        "本試験の記述式と同じ形式です。事例を読んで40字程度で答え、要素ごとの部分点で20点満点の採点をします。",
   doctrine:    "Wikibooks の解説欄から判例法理を出題します。編集者による記述のため、条文と違い誤りを含む可能性があります。",
   recall:      "条見出しだけを頼りに、条文全体を書き起こします。",
 };
@@ -86,11 +90,15 @@ function bindSwitch(sel, fn) {
 }
 
 function syncPanes() {
-  $("#paneRange").hidden  = state.source !== "range";
-  $("#paneNumber").hidden = state.source === "range";
+  // 事例記述は自前の問題バンクから出すので、出題元の選択は使わない
+  const isCase = state.mode === "case";
+  $("#sourceLabel").hidden = isCase;
+  $("#segSource").hidden  = isCase;
+  $("#paneRange").hidden  = isCase || state.source !== "range";
+  $("#paneNumber").hidden = isCase || state.source === "range";
   $("#modeNote").textContent = MODE_NOTE[state.mode];
   $("#modeNote").className = "hint" + (state.mode === "doctrine" ? " warn" : "");
-  $("#optHint").hidden   = state.mode === "recall";
+  $("#optHint").hidden   = isCase || state.mode === "recall";
   $("#optEnding").hidden = state.mode !== "blank";
   $("#endingNote").hidden = state.mode !== "blank";
 }
@@ -167,6 +175,7 @@ async function draw() {
   setStatus(`<p class="msg info"><span class="spin"></span> 条文を取得中…</p>`);
 
   try {
+    if (state.mode === "case") { await presentCase(); return; }
     if (state.source === "number") {
       const id = $("#manualLaw").value;
       const law = Object.values(LAWS).find(l => l.id === id);
@@ -193,6 +202,34 @@ async function draw() {
   } finally {
     $("#draw").disabled = false;
   }
+}
+
+/* ── 事例記述 ── */
+
+/** 直近に出したものを避けて事例問題を1問選ぶ */
+function drawCase() {
+  const fresh = CASES.filter(c => !state.recentCases.includes(c.id));
+  const c = pick(fresh.length ? fresh : CASES);
+  state.recentCases = [c.id, ...state.recentCases.filter(x => x !== c.id)]
+    .slice(0, Math.max(1, CASES.length - 1));
+  return c;
+}
+
+async function presentCase() {
+  const c = drawCase();
+  state.kase = c;
+  state.drill = {mode:"case", answer:c.answer, paragraphIndex:-1};
+
+  // 根拠条文は採点後に添えるだけなので、取れなくても出題は続ける
+  const law = Object.values(LAWS).find(l => l.id === c.lawId);
+  state.ref = law ? {law, num:c.articles[0]} : null;
+  state.article = null;
+  if (law) {
+    try { state.article = await fetchArticle(law, c.articles[0]); } catch (e) {}
+  }
+
+  setStatus("");
+  renderSheet();
 }
 
 /** 1条文を出題する。{ok, reason} を返す */
@@ -227,7 +264,9 @@ async function present(ref, forced) {
       return {ok:false, reason:`${tag}：出題に適さない条文`};
     }
     if (state.mode === "blank")            drill = makeBlank(article, state.showHint, state.emphasizeEnding, refKey(ref));
-    else if (state.mode === "descriptive") drill = makeDescriptive(article, state.showHint, refKey(ref));
+    // 条番号を指定された場合は、40字が作れなくても穴埋めに落として出す
+    else if (state.mode === "descriptive") drill = makeDescriptive(article, state.showHint, refKey(ref))
+                                                || (forced ? makeBlank(article, state.showHint, true, refKey(ref)) : null);
     else drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1};
     if (!drill) {
       if (!forced) return {ok:false, reason:`${tag}：空欄を作れず`};
@@ -244,6 +283,22 @@ async function present(ref, forced) {
 /* ── 出題面の描画 ── */
 function renderSheet() {
   const {drill, article, ref} = state;
+  let html;
+
+  if (drill.mode === "case") {
+    // 論点名は答えそのものなので、採点するまで伏せておく
+    const c = state.kase;
+    html = `
+      <div class="artline">
+        <span class="artno">記述式　${esc(c.field)}</span>
+        <span class="artcap">40字程度・20点</span>
+      </div>
+      <div class="meta"><span>事実関係を読んで設問に答えてください</span></div>
+      <div class="facts">${esc(c.facts)}</div>
+      <div class="ask">${esc(c.question)}</div>`;
+    return finishSheet(html, 40);
+  }
+
   const w = weightOf(ref.law.id, ref.num);
   const stars = w ? "★".repeat(Math.min(w.weight, 3)) : "";
   const isDoctrine = drill.mode === "doctrine";
@@ -252,7 +307,7 @@ function renderSheet() {
     ? renderArticle(article, -1, null)   // 判例法理では条文を参照として添える
     : renderArticle(article, drill.paragraphIndex, drill.question);
 
-  let html = `
+  html = `
     <div class="artline">
       <span class="artno">${esc(ref.law.name)}　${esc(article.title)}</span>
       ${article.caption ? `<span class="artcap">${esc(article.caption)}</span>` : ""}
@@ -275,6 +330,11 @@ function renderSheet() {
   }
 
   const target = drill.mode === "descriptive" ? 40 : Math.max(20, Math.min(60, drill.answer.length + 8));
+  finishSheet(html, target);
+}
+
+/** 解答欄を付けて出題面を確定する（どの形式でも共通） */
+function finishSheet(html, target) {
   html += `
     <div class="answer">
       <textarea id="input" rows="3" placeholder="解答を入力"></textarea>
@@ -297,9 +357,14 @@ function renderSheet() {
 
   // 判例はオプションの直前に置く。採点前でも参照できる。
   const box = $("#cases");
-  box.hidden = false;
-  box.innerHTML = `<button class="ghost" id="cases-btn">この条文の判例を見る</button>`;
-  $("#cases-btn").addEventListener("click", loadCases);
+  if (state.ref) {
+    box.hidden = false;
+    box.innerHTML = `<button class="ghost" id="cases-btn">この条文の判例を見る</button>`;
+    $("#cases-btn").addEventListener("click", loadCases);
+  } else {
+    box.hidden = true;
+    box.innerHTML = "";
+  }
 }
 
 /** 解答用紙のマス目を書き換える */
@@ -325,9 +390,12 @@ function updateGrid() {
 function grade() {
   const {drill, article, ref} = state;
   const input = $("#input").value;
+  state.revealed = true;
+
+  if (drill.mode === "case") { gradeCase(input); return; }
+
   const pct = Math.round(similarity(input, drill.answer) * 100);
   const cls = pct >= 80 ? "hi" : pct >= 50 ? "mid" : "lo";
-  state.revealed = true;
 
   let html = `
     <div class="score"><span class="label" style="margin:0">一致率</span>
@@ -339,11 +407,48 @@ function grade() {
     html += `<p class="label" style="margin-top:16px">条文全体</p>
       <div class="ref">${esc(fullText(article))}</div>`;
   }
+  showResult(html);
+}
+
+/** 事例記述の採点。本試験と同じ要素ごとの部分点で20点満点 */
+function gradeCase(input) {
+  const c = state.kase;
+  const s = scoreCase(input, c.points);
+  const cls = s.pct >= 80 ? "hi" : s.pct >= 50 ? "mid" : "lo";
+
+  let html = `
+    <div class="score"><span class="label" style="margin:0">得点</span>
+      <span class="n ${cls}">${s.earned}<span style="font-size:18px">/${s.full}点</span></span></div>
+    <p class="topicline">${esc(c.topic)}</p>
+    <p class="label">採点要素</p>
+    <div class="points">` +
+    s.detail.map(d => `
+      <div class="point ${d.hit ? "hit" : "miss"}">
+        <span class="mk">${d.hit ? "○" : "×"}</span>
+        <span class="lb">${esc(d.label)}</span>
+        <span class="pt">${d.hit ? "+" : ""}${d.hit ? d.point : 0} / ${d.point}</span>
+      </div>`).join("") + `
+    </div>
+    <p class="label" style="margin-top:16px">解答例（${c.answer.length}字）</p>
+    <div class="answerbox">${esc(c.answer)}</div>
+    <div class="commentary">${esc(c.commentary)}</div>`;
+
+  if (state.article) {
+    html += `<p class="label" style="margin-top:16px">根拠条文</p>
+      <div class="ref">${esc(fullText(state.article))}</div>`;
+  }
+  html += `
+    <p class="hint">キーワードの有無による機械採点です。要素が入っていても文意が通らなければ本試験では得点になりません。解答例と読み比べてください。</p>`;
+
+  showResult(html);
+}
+
+/** 採点結果を表示して「もう一問」を配線する */
+function showResult(html) {
   html += `
     <div style="margin-top:18px">
       <button class="primary" id="next">もう一問</button>
     </div>`;
-
   $("#result").innerHTML = html;
   $("#grade").disabled = true;
   $("#next").addEventListener("click", draw);
