@@ -1,0 +1,286 @@
+/* ══════════════════════════════════════════════
+   出題ロジック
+
+   条文（または判例法理）を受け取り、どこを空欄にするかを決めて
+   問題を組み立てる。採点の一致率もここ。
+   通信もしないし、画面にも触らない ── 入力と出力だけの世界。
+   ══════════════════════════════════════════════ */
+import { fullText } from "./sources.js";
+
+/* ══════════════════════════════════════════════
+   条文の切り分けと、空欄にしてよい部分の判定
+   ══════════════════════════════════════════════ */
+const OPEN  = new Set(["（","(","「","『","【","〔"]);
+const CLOSE = new Set(["）",")","」","』","】","〕"]);
+
+/** 括弧の外にある読点・句点で分割する（区切り記号は保持） */
+function splitSegments(text) {
+  const segs = []; let cur = "", depth = 0;
+  for (const ch of text) {
+    if (OPEN.has(ch))  { depth++; cur += ch; continue; }
+    if (CLOSE.has(ch)) { if (depth > 0) depth--; cur += ch; continue; }
+    if ((ch === "、" || ch === "。") && depth === 0) { segs.push({body:cur, d:ch}); cur = ""; }
+    else cur += ch;
+  }
+  if (cur) segs.push({body:cur, d:""});
+  return segs;
+}
+const joinSegments = segs => segs.map(s => s.body + s.d).join("");
+
+/** 各ブロックが、その文の末尾から何番目か */
+function endOffsets(segs) {
+  const out = new Array(segs.length).fill(0);
+  let start = 0;
+  segs.forEach((s, i) => {
+    if (s.d === "。" || i === segs.length - 1) {
+      for (let j = start; j <= i; j++) out[j] = i - j;
+      start = i + 1;
+    }
+  });
+  return out;
+}
+/** 各ブロックが、その文の先頭かどうか */
+function sentenceHeads(segs) {
+  const out = []; let head = true;
+  segs.forEach(s => { out.push(head); head = (s.d === "。"); });
+  return out;
+}
+
+const hasBracket = s => [...s].some(c => OPEN.has(c) || CLOSE.has(c));
+const strippedLength = t => {
+  let n = 0, d = 0;
+  for (const ch of t) {
+    if (OPEN.has(ch)) { d++; continue; }
+    if (CLOSE.has(ch)) { if (d>0) d--; continue; }
+    if (d === 0) n++;
+  }
+  return n;
+};
+
+/** 「第十五条第一項」のような他条文への絶対参照を含むか */
+function hasArticleRef(s) {
+  const kan = "一二三四五六七八九十百千", unit = "条項号";
+  const c = [...s];
+  for (let i = 0; i < c.length; i++) {
+    if (c[i] !== "第") continue;
+    let j = i + 1;
+    while (j < c.length && kan.includes(c[j])) j++;
+    if (j > i + 1 && j < c.length && unit.includes(c[j])) return true;
+  }
+  return false;
+}
+
+/* 単独では問題にならない語 */
+const CONNECTIVES = new Set(["ただし","また","かつ","及び","並びに","若しくは","又は",
+  "この場合において","前項の場合において","この場合","前項の場合",
+  "次項において同じ","以下同じ","この限りでない"]);
+
+/* 含んでいたら除外する導入句 */
+const BOILERPLATE = ["次に掲げる","次の各号","次のとおり","次に定める",
+  "前項の規定","前二項の規定","前三項の規定","前各項の規定",
+  "前条の規定","前二条の規定","前三条の規定","前四条の規定","前五条の規定",
+  "前各条の規定","次条の規定","前節の規定","前款の規定","前章の規定",
+  "この節の規定","この款の規定",
+  "この場合において","以下この条において","以下この款において",
+  "以下この節において","以下この章において","次項において",
+  "この法律において","この項において"];
+
+/* これで始まるブロックは他条項を指しているだけ */
+const REL_PREFIX = ["前項","前二項","前三項","前各項","次項",
+  "前条","前二条","前三条","前各条","次条",
+  "前号","前二号","前三号","前各号","次号",
+  "前節","前款","前章","前編","同項","同条","同号",
+  "この項","この条","この節","この款"];
+
+/* 条文の節や句はひらがなで終わる。漢字止まりは列挙項目とみなす */
+const endsWithNoun = b => {
+  if (!b) return true;
+  const code = b.charCodeAt(b.length - 1);
+  return !(code >= 0x3041 && code <= 0x3096);
+};
+
+/* 文頭の短い主語（「家庭裁判所は」「行政庁は」） */
+const COND_END = ["ときは","ときには","場合は","場合には","場合において","ときにおいて","限りは"];
+function isBareSubject(b, isHead) {
+  if (!isHead || b.length > 8) return false;
+  if (COND_END.some(e => b.endsWith(e))) return false;
+  return b.endsWith("は") || b.endsWith("が");
+}
+
+function isBlankCandidate(b, isHead = false) {
+  if (isBareSubject(b, isHead)) return false;
+  if (b.length < 5 || b.length > 60) return false;
+  if (hasBracket(b)) return false;
+  if (CONNECTIVES.has(b)) return false;
+  if (BOILERPLATE.some(p => b.includes(p))) return false;
+  if (hasArticleRef(b)) return false;
+  if (REL_PREFIX.some(p => b.startsWith(p))) return false;
+  if (endsWithNoun(b)) return false;
+  return true;
+}
+
+/* 効果を示す言い回し */
+const EFFECT = ["ことができる","なければならない","ものとする","することを要しない",
+  "責任を負う","義務を負う","を負う","を有する",
+  "効力を生じない","無効とする","妨げない","対抗することができない",
+  "取得する","消滅する","推定する","みなす","適用しない","準用する",
+  "目的とする","趣旨とする","図るものとする"];
+
+/* その条文でしか出てこない、あるいは繰り返し問われる文言 */
+const KEYPHRASE = ["事理を弁識する能力","常況","一時回復","医師二人以上","立会い",
+  "同一の錯誤","重大な過失","善意でかつ過失がない","善意の第三者",
+  "知り、又は知ることができた","過失がないとき","悪意",
+  "信義に従い誠実","権利の濫用","公共の福祉","公の秩序又は善良の風俗",
+  "社会通念に照らして","責めに帰することができない事由",
+  "所有の意思をもって","平穏に","公然と","完成猶予","更新",
+  "通常生ずべき損害","特別の事情によって生じた損害","予見すべきであった",
+  "現に利益を受けている限度",
+  "遅滞なく","直ちに","速やかに","あらかじめ","相当の期間を定めて",
+  "正当な理由","やむを得ない事由","不法な原因のために","法律上の原因なく",
+  "簡易迅速かつ公正な手続","公正の確保と透明性の向上","権利利益の救済",
+  "適正な運営","違法又は不当","重大な損害","償うことのできない損害",
+  "緊急の必要","法律上の利益を有する者","公共の福祉に重大な影響"];
+
+function positionWeight(offset, body) {
+  let w = offset === 0 ? 8 : offset === 1 ? 4 : offset === 2 ? 2 : 1;
+  if (EFFECT.some(m => body.includes(m))) w *= 2;
+  if (KEYPHRASE.some(k => body.includes(k))) w *= 10;
+  return w;
+}
+
+export function weightedPick(items, weights) {
+  const total = weights.reduce((a, b) => a + b, 0);
+  if (total <= 0) return items[Math.floor(Math.random() * items.length)];
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) { r -= weights[i]; if (r < 0) return items[i]; }
+  return items[items.length - 1];
+}
+export const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/* ══════════════════════════════════════════════
+   採点：最長共通部分列にもとづく一致率
+   ══════════════════════════════════════════════ */
+const DROP = new Set(["、","。","　"," ","\n","（","）","(",")"]);
+const normalize = s => [...s].filter(c => !DROP.has(c)).join("");
+
+export function similarity(a, b) {
+  const x = [...normalize(a)], y = [...normalize(b)];
+  if (!x.length || !y.length) return 0;
+  let prev = new Array(y.length + 1).fill(0);
+  for (let i = 1; i <= x.length; i++) {
+    const cur = new Array(y.length + 1).fill(0);
+    for (let j = 1; j <= y.length; j++) {
+      cur[j] = x[i-1] === y[j-1] ? prev[j-1] + 1 : Math.max(prev[j], cur[j-1]);
+    }
+    prev = cur;
+  }
+  return prev[y.length] * 2 / (x.length + y.length);
+}
+
+/* ══════════════════════════════════════════════
+   出題の組み立て
+   ══════════════════════════════════════════════ */
+const mark = (answer, showHint) =>
+  `<span class="blank">＿＿＿＿＿${showHint ? `（${answer.length}字）` : ""}</span>`;
+
+/** 参照だけの項（準用規定など）は使わない */
+function isReferenceOnlyParagraph(t) {
+  if (!(hasArticleRef(t) || REL_PREFIX.some(p => t.startsWith(p)))) return false;
+  return ["準用する","読み替える","適用する","適用しない","例による"]
+    .some(m => t.includes(m)) && strippedLength(t) < 120;
+}
+
+export function isPoorQuestion(article, mode) {
+  const text = fullText(article);
+  if (text.length < 25) return true;
+  if (/準用する|読み替える/.test(text) && strippedLength(text) < 80) return true;
+  if (mode === "blank" || mode === "descriptive") {
+    return !article.paragraphs.some(p => {
+      if (isReferenceOnlyParagraph(p.text)) return false;
+      const segs = splitSegments(p.text), heads = sentenceHeads(segs);
+      return segs.some((s, i) => isBlankCandidate(s.body, heads[i]));
+    });
+  }
+  return false;
+}
+
+/* 条文ごとに前回どこを空欄にしたか。同じ場所が続かないようにするためだけの記録で、
+   画面側からは触らないのでこのモジュールに閉じておく。 */
+const lastBlank = new Map();
+
+/** 前回この条文で空欄にした答えを除いた候補を返す（全部消える場合はそのまま） */
+function avoidRepeat(cand, segs, key) {
+  const prev = lastBlank.get(key);
+  if (!prev) return cand;
+  const filtered = cand.filter(i => segs[i].body !== prev);
+  return filtered.length ? filtered : cand;
+}
+
+export function makeBlank(article, showHint, emphasizeEnding, key) {
+  const order = article.paragraphs.map((_, i) => i).sort(() => Math.random() - .5);
+  for (const pi of order) {
+    const text = article.paragraphs[pi].text;
+    if (!text || isReferenceOnlyParagraph(text)) continue;
+    const segs = splitSegments(text);
+    if (segs.length < 2) continue;
+    const heads = sentenceHeads(segs), offs = endOffsets(segs);
+    let cand = segs.map((s, i) => i).filter(i => isBlankCandidate(segs[i].body, heads[i]));
+    if (!cand.length) continue;
+    cand = avoidRepeat(cand, segs, key);
+
+    const idx = emphasizeEnding
+      ? weightedPick(cand, cand.map(i => positionWeight(offs[i], segs[i].body)))
+      : pick(cand);
+
+    const answer = segs[idx].body;
+    if (key) lastBlank.set(key, answer);
+    const shown = segs.map((s, i) => i === idx ? {body:mark(answer, showHint), d:s.d} : s);
+    return {mode:"blank", answer, question:joinSegments(shown), paragraphIndex:pi};
+  }
+  return null;
+}
+
+export function makeDescriptive(article, showHint, key) {
+  for (const pi of article.paragraphs.map((_, i) => i).sort(() => Math.random() - .5)) {
+    const text = article.paragraphs[pi].text;
+    if (!text || isReferenceOnlyParagraph(text)) continue;
+    const segs = splitSegments(text), offs = endOffsets(segs);
+    const spans = [];
+    for (let end = 0; end < segs.length; end++) {
+      if (offs[end] !== 0) continue;
+      for (let start = end; start >= 0; start--) {
+        const bodies = segs.slice(start, end + 1).map(s => s.body);
+        const joined = bodies.join("、");
+        if (joined.length > 55) break;
+        const ok = bodies.every(b => b && !hasBracket(b) && !hasArticleRef(b) && !CONNECTIVES.has(b)
+                   && !BOILERPLATE.some(p => b.includes(p)))
+                   && !REL_PREFIX.some(p => bodies[0].startsWith(p));
+        if (joined.length >= 30 && ok) spans.push([start, end]);
+        if (start > 0 && segs[start - 1].d === "。") break;
+      }
+    }
+    if (!spans.length) continue;
+    const prev = key ? lastBlank.get(key) : null;
+    const fresh = spans.filter(([a, b]) => segs.slice(a, b + 1).map(s => s.body).join("、") !== prev);
+    const [s0, s1] = pick(fresh.length ? fresh : spans);
+    const answer = segs.slice(s0, s1 + 1).map(s => s.body).join("、");
+    if (key) lastBlank.set(key, answer);
+    const shown = [...segs.slice(0, s0), {body:mark(answer, showHint), d:segs[s1].d}, ...segs.slice(s1 + 1)];
+    return {mode:"descriptive", answer, question:joinSegments(shown), paragraphIndex:pi};
+  }
+  return makeBlank(article, showHint, true, key);
+}
+
+export function makeDoctrine(d, showHint, key) {
+  const segs = splitSegments(d.statement);
+  const heads = sentenceHeads(segs), offs = endOffsets(segs);
+  let cand = segs.map((s, i) => i).filter(i => isBlankCandidate(segs[i].body, heads[i]));
+  if (!cand.length) return null;
+  cand = avoidRepeat(cand, segs, key);
+  const idx = weightedPick(cand, cand.map(i => positionWeight(offs[i], segs[i].body)));
+  const answer = segs[idx].body;
+  if (key) lastBlank.set(key, answer);
+  const shown = segs.map((s, i) => i === idx ? {body:mark(answer, showHint), d:s.d} : s);
+  const topic = [d.heading, d.term].filter(Boolean).join("／");
+  return {mode:"doctrine", answer, topic, question:joinSegments(shown), paragraphIndex:-1};
+}
