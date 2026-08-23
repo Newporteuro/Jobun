@@ -4,16 +4,21 @@
    操作卓の状態を持ち、取得（sources）と出題（drill）を呼び分けて、
    結果を DOM に書く。アプリの入口でもある（末尾で initControls）。
    ══════════════════════════════════════════════ */
-import { LAWS, SCOPES, weightOf } from "./weights.js";
+/* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
+   これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
+   ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
+export const VERSION = "20260823b";
+
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260823b";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js";
+} from "./sources.js?v=20260823b";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js";
-import { CASES } from "./cases.js";
+} from "./drill.js?v=20260823b";
+import { CASES } from "./cases.js?v=20260823b";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -45,6 +50,12 @@ const MODE_NOTE = {
   recall:      "条見出しだけを頼りに、条文全体を書き起こします。",
 };
 
+/* 出題面に出す形式名。いま何を解いているのかを問題側にも表示する */
+const MODE_LABEL = {
+  blank: "穴埋め", descriptive: "条文40字", case: "事例記述",
+  doctrine: "判例法理", recall: "全文再現",
+};
+
 /* ── 初期化 ── */
 function initControls() {
   $("#scope").innerHTML = SCOPES.map((s, i) => `<option value="${i}">${esc(s.name)}</option>`).join("");
@@ -70,6 +81,10 @@ function initControls() {
     $("#cover").classList.add("hide");
     setTimeout(() => { const c = $("#cover"); if (c) c.remove(); }, 500);
   });
+  // 読み込まれているスクリプトの版。古いものが残っていないか画面から確かめられる
+  const v = $("#version");
+  if (v) v.textContent = "版 " + VERSION + "（形式：" + Object.values(MODE_LABEL).join("・") + "）";
+
   syncPanes(); syncFields();
 }
 
@@ -263,14 +278,30 @@ async function present(ref, forced) {
     if (!forced && isPoorQuestion(article, state.mode)) {
       return {ok:false, reason:`${tag}：出題に適さない条文`};
     }
-    if (state.mode === "blank")            drill = makeBlank(article, state.showHint, state.emphasizeEnding, refKey(ref));
-    // 条番号を指定された場合は、40字が作れなくても穴埋めに落として出す
-    else if (state.mode === "descriptive") drill = makeDescriptive(article, state.showHint, refKey(ref))
-                                                || (forced ? makeBlank(article, state.showHint, true, refKey(ref)) : null);
-    else drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1};
+    if (state.mode === "blank") {
+      drill = makeBlank(article, state.showHint, state.emphasizeEnding, refKey(ref));
+    } else if (state.mode === "descriptive") {
+      drill = makeDescriptive(article, state.showHint, refKey(ref));
+      // 条番号を指定された場合は、40字が作れなくても穴埋めに落として出す
+      if (!drill && forced) {
+        drill = makeBlank(article, state.showHint, true, refKey(ref));
+        if (drill) drill.notice = "この条文は効果部分が40字に届かないため、穴埋めとして出題します。";
+      }
+    }
+    else if (state.mode === "recall") {
+      drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1};
+    } else {
+      // 知らない形式を黙って全文再現に落とすと、原因の分からない出題になる。
+      // 起きるとすれば index.html だけ新しくスクリプトが古い場合なので、そう伝える。
+      setStatus(`<p class="msg err">形式「${esc(state.mode)}」を解釈できませんでした。`
+        + `<br>古いスクリプトが残っている可能性があります。ページを再読み込みしてください。</p>`);
+      return {ok:true};
+    }
     if (!drill) {
       if (!forced) return {ok:false, reason:`${tag}：空欄を作れず`};
-      drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1};
+      // 黙って全文再現に化けると、なぜこの問題が出たのか分からなくなる
+      drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1,
+               notice:"この条文は空欄にできる部分がないため、全文再現として出題します。"};
     }
   }
 
@@ -293,7 +324,10 @@ function renderSheet() {
         <span class="artno">記述式　${esc(c.field)}</span>
         <span class="artcap">40字程度・20点</span>
       </div>
-      <div class="meta"><span>事実関係を読んで設問に答えてください</span></div>
+      <div class="meta">
+        <span class="modetag">${esc(MODE_LABEL.case)}</span>
+        <span>事実関係を読んで設問に答えてください</span>
+      </div>
       <div class="facts">${esc(c.facts)}</div>
       <div class="ask">${esc(c.question)}</div>`;
     return finishSheet(html, 40);
@@ -313,8 +347,12 @@ function renderSheet() {
       ${article.caption ? `<span class="artcap">${esc(article.caption)}</span>` : ""}
     </div>
     <div class="meta">
+      <span class="modetag">${esc(MODE_LABEL[drill.mode] || drill.mode)}</span>
       ${stars ? `<span class="stars">${stars}</span><span>${esc(w.note)}</span>` : `<span>重要度は未設定</span>`}
     </div>`;
+
+  // 形式が切り替わったときは理由を書く。黙って別形式になると混乱する
+  if (drill.notice) html += `<p class="msg info">${esc(drill.notice)}</p>`;
 
   if (isDoctrine) {
     html += `<p class="label">空欄を埋めてください</p>

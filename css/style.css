@@ -108,6 +108,8 @@ button.ghost:hover{background:var(--paper-raised)}
 .artcap{font-family:var(--mincho);font-size:15px;color:var(--ai)}
 .meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--sumi-soft);margin:0 0 14px}
 .stars{color:var(--shu);letter-spacing:.1em}
+.modetag{font-size:10px;letter-spacing:.16em;color:var(--paper);background:var(--ai);
+  border-radius:2px;padding:3px 7px;white-space:nowrap;flex:0 0 auto}
 .label{font-size:10.5px;letter-spacing:.24em;color:var(--sumi-soft);margin:0 0 6px}
 .jobun{
   font-family:var(--mincho);font-size:16.5px;line-height:2.05;
