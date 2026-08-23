@@ -7,18 +7,18 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260823h";
+export const VERSION = "20260824a";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260823h";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260824a";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260823h";
+} from "./sources.js?v=20260824a";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260823h";
-import { CASES } from "./cases.js?v=20260823h";
+} from "./drill.js?v=20260824a";
+import { CASES } from "./cases.js?v=20260824a";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -81,6 +81,14 @@ function initControls() {
     $("#cover").classList.add("hide");
     setTimeout(() => { const c = $("#cover"); if (c) c.remove(); }, 500);
   });
+  $("#logSave").addEventListener("click", saveLogFile);
+  $("#logClear").addEventListener("click", () => {
+    if (!confirm("たまっている解答の記録を消去します。よろしいですか。")) return;
+    try { localStorage.removeItem(LOG_KEY); } catch (e) {}
+    syncLogPanel();
+  });
+  syncLogPanel();
+
   // 読み込まれているスクリプトの版。古いものが残っていないか画面から確かめられる
   const v = $("#version");
   if (v) v.textContent = "版 " + VERSION + "（形式：" + Object.values(MODE_LABEL).join("・") + "）";
@@ -484,8 +492,9 @@ function gradeCase(input) {
     <button class="ghost" id="copylog" style="margin-top:10px">この結果を記録用にコピー</button>
     <p class="hint" id="copymsg" hidden></p>`;
 
-  // 採点のとりこぼしを報告してもらうための控え。書き写さずに済むよう組み立てておく
+  // 採点のとりこぼしを報告してもらうための控え。採点した時点で自動的にためる
   state.lastLog = buildLog(c, s, input);
+  appendLog(state.lastLog);
   showResult(html);
 }
 
@@ -504,6 +513,66 @@ function buildLog(c, s, input) {
     "コメント: ",
     "",
   ].join("\n");
+}
+
+/* ══════════════════════════════════════════════
+   解答の記録
+
+   採点するたびに1件ずつ端末内（localStorage）にためて、
+   まとめて1つのテキストファイルとして書き出す。
+   クリップボード経由だと貼り付け先で保存する手間が要るため、
+   ファイルとして直接受け取れるようにしている。
+   ══════════════════════════════════════════════ */
+const LOG_KEY = "jobun-answer-log";
+const LOG_MAX = 300;
+
+function readLog() {
+  try { return JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); } catch (e) { return []; }
+}
+function appendLog(text) {
+  try {
+    const a = readLog();
+    a.push(text);
+    localStorage.setItem(LOG_KEY, JSON.stringify(a.slice(-LOG_MAX)));
+  } catch (e) {}   // 保存できない設定でも出題は続けられるようにする
+  syncLogPanel();
+}
+function syncLogPanel() {
+  const c = $("#logCount");
+  if (!c) return;
+  const n = readLog().length;
+  c.textContent = n
+    ? `${n}件たまっています。ファイルに保存して渡してください。`
+    : "事例記述を採点すると、ここに1件ずつたまります。";
+  $("#logSave").disabled = !n;
+  $("#logClear").disabled = !n;
+}
+
+const two = n => String(n).padStart(2, "0");
+function fileStamp(d) {
+  return `${d.getFullYear()}${two(d.getMonth() + 1)}${two(d.getDate())}-${two(d.getHours())}${two(d.getMinutes())}`;
+}
+
+function saveLogFile() {
+  const a = readLog();
+  if (!a.length) return;
+  const now = new Date();
+  const head = "條文ドリル｜解答の記録\n"
+    + `書き出し ${now.toLocaleString("ja-JP")}　版 ${VERSION}　${a.length}件\n`
+    + "各件の「コメント:」に気づいたことを書き足してから渡してください。\n"
+    + "・×だが内容は合っているはず → 採点のとりこぼしです\n"
+    + "・○だが実は分かっていなかった → 採点が甘すぎます\n"
+    + "・解説や問題文の誤り、設問の分かりにくさ\n\n";
+  // 先頭のBOMは、メモ帳などで文字化けさせないため
+  const blob = new Blob(["﻿" + head + a.join("\n")], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `jobun-log-${fileStamp(now)}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /** クリップボードへ。HTTPS でない場合などのために古い方法も残す */
