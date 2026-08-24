@@ -5,7 +5,7 @@
    問題を組み立てる。採点の一致率もここ。
    通信もしないし、画面にも触らない ── 入力と出力だけの世界。
    ══════════════════════════════════════════════ */
-import { fullText } from "./sources.js?v=20260824g";   // ?v= は ui.js の VERSION と揃える
+import { fullText } from "./sources.js?v=20260824h";   // ?v= は ui.js の VERSION と揃える
 
 /* ══════════════════════════════════════════════
    条文の切り分けと、空欄にしてよい部分の判定
@@ -375,12 +375,19 @@ const KANSUJI = {"二十":"20","三十":"30","四十":"40","五十":"50",
   "五":"5","六":"6","七":"7","八":"8","九":"9"};
 const KANSUJI_RE = /(二十|三十|四十|五十|十|[一二三四五六七八九])(?=[月年日])/g;
 
+/* 「1/3」を「3分の1」に揃える。相続分や遺留分は、答案でスラッシュで書かれることがある。
+   後ろに数字が続くときは変換しない。normalize が括弧を落とすため「1/6(100万円)」は
+   「1/6100万円」になっており、これを分数として読むと 6100分の1 になってしまう。
+   拾えないのは構わないが、取り違えるのは避ける。 */
+const FRACTION = /(\d{1,3})\/(\d{1,3})(?!\d)/g;
+
 function loosen(s) {
   let t = s;
   for (const [from, to] of OKURIGANA) t = t.split(from).join(to);
   t = t.replace(SHIURU, "でき");
   t = t.replace(KOTO_DEKIRU, "でき");
   t = t.replace(COUNTER_KANA, "");
+  t = t.replace(FRACTION, (_, a, b) => `${b}分の${a}`);
   return t.replace(KANSUJI_RE, m => KANSUJI[m]);
 }
 
