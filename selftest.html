@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>採点の自己検査｜條文ドリル</title>
+<style>
+  body{font-family:ui-monospace,"SFMono-Regular",Consolas,"Noto Sans Mono CJK JP",monospace;
+       font-size:13px;line-height:1.8;margin:0;padding:24px;background:#FBFAF7;color:#16181C}
+  h1{font-size:16px;margin:0 0 4px}
+  .lead{font-size:12px;color:#5A5C60;margin:0 0 20px;line-height:1.9}
+  h2{font-size:14px;margin:26px 0 8px;padding-bottom:5px;border-bottom:1px solid #DDD9D0}
+  pre{margin:0;white-space:pre-wrap;word-break:break-all}
+  .ok{color:#2E7D4F}
+  .ng{color:#B5352A;font-weight:700}
+  .dim{color:#5A5C60}
+  #summary{padding:10px 14px;border-left:3px solid #16181C;background:#F3F1EB;margin:0 0 8px}
+  #err{color:#B5352A}
+</style>
+</head>
+<body>
+
+<h1>採点の自己検査</h1>
+<p class="lead">
+  cases.js の採点データと drill.js の照合ロジックを、実際に走らせて確かめます。<br>
+  <span class="dim">※ file:// で直接開くとブラウザが ES モジュールの読み込みを拒みます。
+  デプロイ先で開くか、このフォルダで簡易サーバを立ててください（例：<code>python -m http.server</code>）。</span>
+</p>
+<div id="summary" class="dim">読み込み中…</div>
+<pre id="err"></pre>
+<div id="out"></div>
+
+<script type="module">
+/* ?v= は ui.js の VERSION と揃える */
+import { CASES }     from "./js/cases.js?v=20260824e";
+import { scoreCase } from "./js/drill.js?v=20260824e";
+
+const out = document.getElementById("out");
+let ngCount = 0;
+
+const esc = s => String(s).replace(/[&<>]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+function section(title, lines) {
+  const h = document.createElement("h2"); h.textContent = title; out.append(h);
+  const p = document.createElement("pre"); p.innerHTML = lines.join("\n"); out.append(p);
+}
+const mark = ok => { if (!ok) ngCount++; return ok ? `<span class="ok">PASS</span>` : `<span class="ng">FAIL</span>`; };
+
+/* 各要素をなぜそう採ったのか。ui.js の reason() と同じ考え方 */
+function why(d) {
+  if (d.implied)          return `「${d.impliedFrom}」に含まれるものとして加点`;
+  if (d.hit && d.match)   return `「${d.match.text}」が該当` +
+                                 (d.match.how ? `（${d.match.how}照合）` : "") +
+                                 (d.match.spread ? "（割り込みを許して照合）" : "");
+  return "";
+}
+const brief = s => s.detail.map(d => (d.hit ? "○" : "×") + d.label).join("  ");
+
+/* ══════ A. 解答例と別解は満点か（とりこぼし） ══════ */
+{
+  const lines = [];
+  for (const c of CASES) {
+    for (const [tag, text] of [["解答例", c.answer], ["別解", c.variant]]) {
+      if (!text) continue;
+      const s = scoreCase(text, c.points);
+      if (s.pct < 100) lines.push(
+        `${mark(false)} ${c.id} ${tag} ${s.earned}/${s.full}  落ち: ` +
+        esc(s.detail.filter(d => !d.hit).map(d => d.label).join(" / ")));
+    }
+  }
+  if (!lines.length) lines.push(`${mark(true)} 全 ${CASES.length} 問、解答例・別解ともに満点`);
+  section("A. 解答例・別解の自己採点", lines);
+}
+
+/* ══════ B. impliedBy のラベルが実在するか ══════ */
+{
+  const lines = [];
+  for (const c of CASES) {
+    const labels = new Set(c.points.map(p => p.label));
+    for (const p of c.points) {
+      if (!p.impliedBy) continue;
+      for (const l of p.impliedBy) {
+        if (labels.has(l)) lines.push(`${mark(true)} ${c.id} 「${esc(p.label)}」 ← 「${esc(l)}」`);
+        else               lines.push(`${mark(false)} ${c.id} 「${esc(p.label)}」の impliedBy「${esc(l)}」に対応する要素がない`);
+      }
+    }
+  }
+  if (!lines.length) lines.push(`<span class="dim">impliedBy を使っている要素はない</span>`);
+  section("B. impliedBy のラベル整合", lines);
+}
+
+/* ══════ C. 中身のない解答で点が入らないか ══════ */
+{
+  const JUNK = ["わかりません。", "あああああああああああああああああああ",
+                "本件については法律の規定に従って適切に処理されるべきである。",
+                "できない。ない。負わない。求めることはできない。"];
+  const lines = JUNK.map(j => {
+    const worst = CASES.map(c => ({id: c.id, s: scoreCase(j, c.points)}))
+                       .sort((a, b) => b.s.pct - a.s.pct)[0];
+    return `${mark(worst.s.pct <= 40)} 最大 ${worst.s.earned}/${worst.s.full} (${worst.id})  ${esc(j)}`;
+  });
+  section("C. 無関係な解答", lines);
+}
+
+/* ══════ D. 誤答プローブ ══════
+   内容が法的に誤っている解答。max を超えたら、その要素の words が緩すぎる。
+   min を下回ったら、正しく書いた解答を取りこぼしている。 */
+const PROBES = [
+  // 誤答（上限つき）
+  ["kokubai-1-1", "国又は公共団体が賠償責任を負い、公務員C個人もAに対して直接責任を負う。", 0, 13],
+  ["minpo-612",   "賃貸人はいつでも解除できる。背信的行為かどうかを考慮することはできない。", 0, 5],
+  ["minpo-177",   "Cは背信的悪意者に当たらないので、Bは登記なくして対抗できない。", 0, 0],
+  ["minpo-177",   "背信的悪意者ではなく正当な利益を有する第三者となり、Bは登記なくして対抗できない。", 0, 0],
+  ["minpo-651",   "解除は有効であり、やむを得ない事由があるからAはBの損害を賠償しない。", 0, 5],
+  ["minpo-605-2", "賃貸人たる地位はCに移転し、Cは所有権移転登記をしなければならないが、Bに賃料を請求できる。", 0, 14],
+  ["gyote-14",    "行政庁は理由を示す必要はなく、処分と同時である必要もなく、書面によることも要しない。", 0, 0],
+  ["minpo-95",    "Aの意思表示は錯誤に基づくものであり、その錯誤が重要なものであること。", 0, 7],
+  ["minpo-545",   "Bへの所有権移転登記があるので、Aは第三者Cに甲土地の返還を請求できる。", 0, 0],
+  ["minpo-545",   "解除により契約は遡及的に消滅し、登記を備えた第三者の権利も害することができる。", 0, 7],
+  ["kokubai-2",   "公の営造物が通常有すべき安全性を欠いていないので、第三者は賠償の対象外である。", 0, 4],
+  ["kokubai-2",   "予見可能な瑕疵を指し、利用者以外の第三者は対象とならない。", 0, 0],
+  ["minpo-117",   "相手方の選択により、履行不能を理由として損害賠償のみを請求できる。", 0, 14],
+  ["minpo-162",   "十年間、平穏かつ公然と占有した者は所有権を取得する。", 0, 9],
+  ["minpo-509",   "悪意でない不法行為による損害賠償債務を受働債権とする相殺はできない。", 0, 12],
+  // 正答（下限つき）── 書き方を変えても取りこぼさないこと
+  ["minpo-177",   "背信的悪意者は正当な利益を有する第三者に当たらず、Bは登記なく対抗できる。", 20, 20],
+  ["minpo-177",   "Cは背信的悪意者で177条の第三者に当たらず、Bは対抗に登記を要しない。", 20, 20],
+  ["minpo-545",   "登記を備えた転得者Cは解除によってその権利を害されず、Aの返還請求は認められない。", 20, 20],
+  ["kokubai-2",   "安全性を欠く状態をいい、空港等の利用者のみならず、周辺住民に生じた損害も対象となる。", 16, 16],
+  ["minpo-612",   "背信性が認められない特段の事情がある場合、解除は認められない。", 15, 15],
+  ["minpo-95",    "動機が表示され、かつ社会通念に照らして重要な錯誤であること。", 20, 20],
+];
+{
+  const lines = [];
+  for (const [id, text, min, max] of PROBES) {
+    const c = CASES.find(x => x.id === id);
+    if (!c) { lines.push(`${mark(false)} ${id} が見つからない`); continue; }
+    const s = scoreCase(text, c.points);
+    const ok = s.earned >= min && s.earned <= max;
+    lines.push(`${mark(ok)} ${id} ${s.earned}/${s.full}` +
+               (ok ? "" : `  <span class="ng">（期待 ${min}〜${max}）</span>`));
+    lines.push(`     <span class="dim">${esc(text)}</span>`);
+    for (const d of s.detail) {
+      const w = why(d);
+      lines.push(`     ${d.hit ? "○" : "×"} ${esc(d.label)} (${d.hit ? d.point : 0}/${d.point})` +
+                 (w ? `  <span class="dim">${esc(w)}</span>` : ""));
+    }
+  }
+  section("D. 誤答・正答プローブ", lines);
+}
+
+/* ══════ E. 他問の解答で点が入る要素（緩い語の目安） ══════ */
+{
+  const corpus = [];
+  for (const c of CASES) {
+    if (c.answer)  corpus.push({id: c.id, text: c.answer});
+    if (c.variant) corpus.push({id: c.id, text: c.variant});
+  }
+  const rows = [];
+  for (const c of CASES) {
+    for (const p of c.points) {
+      const hits = new Set();
+      for (const src of corpus) {
+        if (src.id === c.id) continue;
+        if (scoreCase(src.text, [p]).earned > 0) hits.add(src.id);
+      }
+      if (hits.size >= 3) rows.push({n: hits.size, id: c.id, label: p.label, pt: p.point, hits});
+    }
+  }
+  rows.sort((a, b) => b.n - a.n);
+  const lines = rows.length
+    ? [`<span class="dim">他問の解答例・別解 ${corpus.length} 本のうち、3問以上で当たってしまう要素。`
+       + `その問題を解いている限りは実害が出ないこともあるが、語が緩い目安になる。</span>`]
+       .concat(rows.map(r => `  [${r.n}問] ${r.id} 「${esc(r.label)}」 ${r.pt}点`))
+    : [`${mark(true)} 3問以上に当たる要素はない`];
+  section("E. 語が緩い要素の目安", lines);
+}
+
+/* ══════ まとめ ══════ */
+const sum = document.getElementById("summary");
+sum.className = ngCount ? "ng" : "ok";
+sum.textContent = ngCount ? `FAIL ${ngCount} 件` : "すべて PASS";
+</script>
+
+<script>
+window.addEventListener("error", e => {
+  document.getElementById("err").textContent =
+    "読み込みに失敗しました： " + e.message +
+    "\nfile:// で開いている場合は、簡易サーバ経由で開いてください。";
+});
+</script>
+</body>
+</html>

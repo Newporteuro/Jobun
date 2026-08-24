@@ -5,7 +5,7 @@
    問題を組み立てる。採点の一致率もここ。
    通信もしないし、画面にも触らない ── 入力と出力だけの世界。
    ══════════════════════════════════════════════ */
-import { fullText } from "./sources.js?v=20260824c";   // ?v= は ui.js の VERSION と揃える
+import { fullText } from "./sources.js?v=20260824e";   // ?v= は ui.js の VERSION と揃える
 
 /* ══════════════════════════════════════════════
    条文の切り分けと、空欄にしてよい部分の判定
@@ -452,11 +452,34 @@ function forms(w) {
   return f;
 }
 
-/** 解答を、照合に使う何通りかの書き方に開く */
+/** 解答を、照合に使う何通りかの書き方に開く。どう開いたものかも添える。
+    どの書き方で当たったのかが分かると、採点の理由を学習者に示せる */
 function readings(input) {
   const base = normalize(input);
-  const neg = expandNegation(base);
-  return [...new Set([base, loosen(base), neg, loosen(neg)])];
+  const neg  = expandNegation(base);
+  const list = [
+    {text: base,         how: ""},
+    {text: loosen(base), how: "表記のゆれを吸収して"},
+    {text: neg,          how: "打ち消しの言い換えを開いて"},
+    {text: loosen(neg),  how: "表記のゆれと打ち消しを開いて"},
+  ];
+  const seen = new Set();
+  return list.filter(r => { if (seen.has(r.text)) return false; seen.add(r.text); return true; });
+}
+
+/** キーワード w が、解答のいずれかの書き方のどこに現れるか。現れなければ null。
+    元のままの照合を先に試すので、素直に当たったものは素直な形で返る */
+function findMatch(w, reads) {
+  const f = forms(w);
+  for (const [group, spread] of [[f.strict, false], [f.loose, true]]) {
+    for (const re of group) {
+      for (const r of reads) {
+        const m = re.exec(r.text);
+        if (m) return {text: m[0], how: r.how, spread};
+      }
+    }
+  }
+  return null;
 }
 
 /** キーワード w が、解答のいずれかの書き方に現れるか */
@@ -466,16 +489,23 @@ function appears(w, texts) {
       || f.loose.some(re => texts.some(t => re.test(t)));
 }
 
-/** 事例記述の要素採点。本試験と同じく要素ごとの部分点で採る */
+/** 事例記述の要素採点。本試験と同じく要素ごとの部分点で採る。
+    各要素には、なぜそう採ったのかを match / impliedFrom に残す */
 export function scoreCase(input, points) {
-  const texts = readings(input);
-  const detail = points.map(p => ({
-    label: p.label,
-    example: p.example || "",
-    point: p.point,
-    hit: p.words.some(w => appears(w, texts)),
-    implied: false,
-  }));
+  const reads = readings(input);
+  const detail = points.map(p => {
+    let match = null;
+    for (const w of p.words) { match = findMatch(w, reads); if (match) break; }
+    return {
+      label: p.label,
+      example: p.example || "",
+      point: p.point,
+      hit: !!match,
+      match,              // {text, how, spread} ── 解答のどこが当たったか
+      implied: false,
+      impliedFrom: "",    // 含意で採った場合、その元になった要素
+    };
+  });
 
   /* 他の要素を書いた時点で当然そこに含まれている、という要素を拾う。
      「直接自己への明渡しを請求できる」と書いてあれば占有の排除も求めている。
@@ -485,8 +515,9 @@ export function scoreCase(input, points) {
     again = false;
     points.forEach((p, i) => {
       if (detail[i].hit || !p.impliedBy) return;
-      if (!p.impliedBy.some(l => found.get(l) && found.get(l).hit)) return;
-      detail[i].hit = true; detail[i].implied = true; again = true;
+      const src = p.impliedBy.find(l => found.get(l) && found.get(l).hit);
+      if (!src) return;
+      detail[i].hit = true; detail[i].implied = true; detail[i].impliedFrom = src; again = true;
     });
   }
 

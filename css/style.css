@@ -179,6 +179,9 @@ textarea:focus{outline:2px solid var(--ai);outline-offset:-1px}
 .point.miss .lb{color:var(--sumi-soft)}
 .point .pt{font-variant-numeric:tabular-nums;color:var(--sumi-soft);font-size:12px;flex:0 0 auto}
 .point .eg{display:block;font-size:11.5px;color:var(--shu);margin:3px 0 0;line-height:1.7}
+/* 加点した要素の根拠。落ちた要素の例（朱）と混ざらないよう色を分ける */
+.point .why{display:block;font-size:11.5px;color:var(--sumi-soft);margin:3px 0 0;line-height:1.7}
+.commentary strong{font-weight:700;color:var(--sumi)}
 .answerbox.alt{border-color:var(--hairline);border-left-color:var(--ai);background:var(--paper-raised);font-size:15px}
 .commentary{font-size:13px;line-height:1.95;color:var(--sumi-soft);
   background:var(--paper-raised);border-left:2px solid var(--hairline);padding:12px 14px;margin:14px 0 0}

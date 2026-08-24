@@ -7,18 +7,18 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260824c";
+export const VERSION = "20260824e";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260824c";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260824e";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260824c";
+} from "./sources.js?v=20260824e";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260824c";
-import { CASES } from "./cases.js?v=20260824c";
+} from "./drill.js?v=20260824e";
+import { CASES } from "./cases.js?v=20260824e";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -456,6 +456,22 @@ function grade() {
   showResult(html);
 }
 
+/** commentary の **強調** を太字にする。esc を通したあとに掛けるので、
+    解説文以外のものが紛れ込むことはない */
+const bold = t => t.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+/** なぜその要素に点が入った（入らなかった）のかを一文で返す */
+function reason(d) {
+  if (d.implied) return `「${d.impliedFrom}」を書いた時点で含まれているものとして加点`;
+  if (d.hit && d.match) {
+    const how = d.match.how ? `（${d.match.how}照合）` : "";
+    const sp  = d.match.spread ? "（語の割り込みを許して照合）" : "";
+    return `解答の「${d.match.text}」が該当${how}${sp}`;
+  }
+  if (!d.hit && d.example) return `例：${d.example}`;
+  return "";
+}
+
 /** 事例記述の採点。本試験と同じ要素ごとの部分点で20点満点 */
 function gradeCase(input) {
   const c = state.kase;
@@ -472,10 +488,8 @@ function gradeCase(input) {
       <div class="point ${d.hit ? "hit" : "miss"}">
         <span class="mk">${d.hit ? "○" : "×"}</span>
         <span class="lb">${esc(d.label)}${
-          // その要素を直接は書いていないが、他の記述に含まれているとみた場合
-          d.implied ? `<span class="eg">他の要素の記述に含まれるものとして加点</span>` : ""}${
-          // 落ちた要素は、どう書けば得点になったのかを示す
-          !d.hit && d.example ? `<span class="eg">例：${esc(d.example)}</span>` : ""}</span>
+          // 加点した要素はその根拠を、落ちた要素はどう書けば得点になったのかを示す
+          reason(d) ? `<span class="${d.hit ? "why" : "eg"}">${esc(reason(d))}</span>` : ""}</span>
         <span class="pt">${d.hit ? "+" : ""}${d.hit ? d.point : 0} / ${d.point}</span>
       </div>`).join("") + `
     </div>
@@ -483,7 +497,7 @@ function gradeCase(input) {
     <div class="answerbox">${esc(c.answer)}</div>` +
     (c.variant ? `<p class="label" style="margin-top:12px">別解（${c.variant.length}字）</p>
     <div class="answerbox alt">${esc(c.variant)}</div>` : "") + `
-    <div class="commentary">${esc(c.commentary)}</div>`;
+    <div class="commentary">${bold(esc(c.commentary))}</div>`;
 
   if (state.article) {
     html += `<p class="label" style="margin-top:16px">根拠条文</p>
@@ -510,8 +524,12 @@ function buildLog(c, s, input) {
     `設問: ${c.question}`,
     `私の解答(${[...input.replace(/\n/g, "")].length}字): ${input.trim()}`,
     `得点: ${s.earned}/${s.full}`,
-    ...s.detail.map(d =>
-      `  ${d.hit ? "○" : "×"} ${d.label}${d.implied ? "（含意）" : ""} (${d.hit ? d.point : 0}/${d.point})`),
+    // 採点の当否をあとから検討できるよう、記録にも根拠を残す
+    ...s.detail.flatMap(d => {
+      const head = `  ${d.hit ? "○" : "×"} ${d.label}${d.implied ? "（含意）" : ""} (${d.hit ? d.point : 0}/${d.point})`;
+      const why = reason(d);
+      return why ? [head, `      ${why}`] : [head];
+    }),
     `解答例: ${c.answer}`,
     "コメント: ",
     "",
