@@ -7,18 +7,18 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260824t";
+export const VERSION = "20260824u";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260824t";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260824u";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260824t";
+} from "./sources.js?v=20260824u";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260824t";
-import { CASES } from "./cases.js?v=20260824t";
+} from "./drill.js?v=20260824u";
+import { CASES } from "./cases.js?v=20260824u";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -45,7 +45,7 @@ function noteDrawn(ref) {
 const MODE_NOTE = {
   blank:       "条文の一部を空欄にします。",
   descriptive: "条件節を残し、条文の効果部分を40字程度で書かせます。",
-  case:        "本試験の記述式と同じ形式です。事例を読んで40字程度で答え、要素ごとの部分点で20点満点の採点をします。",
+  case:        "本試験の記述式と同じ形式です。事例を読んで40字程度で答え、要素ごとの部分点で20点満点の採点をします。まだ解いていない問題と、前回の得点が低かった問題を重めに出します。",
   doctrine:    "Wikibooks の解説欄から判例法理を出題します。編集者による記述のため、条文と違い誤りを含む可能性があります。",
   recall:      "条見出しだけを頼りに、条文全体を書き起こします。",
 };
@@ -229,10 +229,37 @@ async function draw() {
 
 /* ── 事例記述 ── */
 
-/** 直近に出したものを避けて事例問題を1問選ぶ */
+/** 解答の記録から、事例問題ごとの直近の得点率を読む。
+    記録は古い順に並んでいるので、後の記録で上書きされて最新のものが残る。
+    空欄のまま採点したものは実力を表さないので数えない。 */
+function caseScores() {
+  const m = new Map();
+  for (const text of readLog()) {
+    const id  = (/\[([^\]]+)\]/.exec(text) || [])[1];
+    const len = +((/私の解答\((\d+)字\)/.exec(text) || [])[1]);
+    const sc  = /得点:\s*(\d+)\/(\d+)/.exec(text);
+    if (!id || !sc || !len || !+sc[2]) continue;
+    m.set(id, +sc[1] / +sc[2]);
+  }
+  return m;
+}
+
+/* 苦手なものほど出やすくする。まだ解いていないものがいちばん重い。
+   条文モードの重要度（MULTIPLIER）と同じ考え方。 */
+function caseWeight(pct) {
+  if (pct === undefined) return 8;   // 未出題
+  if (pct < 0.4) return 6;
+  if (pct < 0.7) return 3;
+  if (pct < 1)   return 2;
+  return 1;                          // 満点だったものは控えめに
+}
+
+/** 直近に出したものを避け、苦手なものを重めにして事例問題を1問選ぶ */
 function drawCase() {
   const fresh = CASES.filter(c => !state.recentCases.includes(c.id));
-  const c = pick(fresh.length ? fresh : CASES);
+  const pool = fresh.length ? fresh : CASES;
+  const scores = caseScores();
+  const c = weightedPick(pool, pool.map(x => caseWeight(scores.get(x.id))));
   state.recentCases = [c.id, ...state.recentCases.filter(x => x !== c.id)]
     .slice(0, Math.max(1, CASES.length - 1));
   return c;
@@ -508,9 +535,11 @@ function gradeCase(input) {
     <button class="ghost" id="copylog" style="margin-top:10px">この結果を記録用にコピー</button>
     <p class="hint" id="copymsg" hidden></p>`;
 
-  // 採点のとりこぼしを報告してもらうための控え。採点した時点で自動的にためる
+  // 採点のとりこぼしを報告してもらうための控え。採点した時点で自動的にためる。
+  // 空欄のまま採点したものは記録しない。問題を見て回るための空打ちで記録が汚れると、
+  // 苦手判定（caseScores）まで狂う
   state.lastLog = buildLog(c, s, input);
-  appendLog(state.lastLog);
+  if (input.trim()) appendLog(state.lastLog);
   showResult(html);
 }
 
@@ -562,8 +591,13 @@ function syncLogPanel() {
   const c = $("#logCount");
   if (!c) return;
   const n = readLog().length;
+  // 記録は苦手判定にも使うので、いま何問が未着手・何問が苦手扱いなのかも見せる
+  const scores = caseScores();
+  const weak = CASES.filter(x => (scores.get(x.id) ?? 0) < 0.7).length;
+  const done = scores.size;
   c.textContent = n
     ? `${n}件たまっています。ファイルに保存して渡してください。`
+      + `（${CASES.length}問中${done}問を解答済み、うち重点は${weak}問）`
     : "事例記述を採点すると、ここに1件ずつたまります。";
   $("#logSave").disabled = !n;
   $("#logClear").disabled = !n;
