@@ -7,18 +7,18 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260825b";
+export const VERSION = "20260825c";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825b";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825c";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260825b";
+} from "./sources.js?v=20260825c";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260825b";
-import { CASES } from "./cases.js?v=20260825b";
+} from "./drill.js?v=20260825c";
+import { CASES } from "./cases.js?v=20260825c";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -254,11 +254,16 @@ function caseWeight(pct) {
   return 1;                          // 満点だったものは控えめに
 }
 
-/** 直近に出したものを避け、苦手なものを重めにして事例問題を1問選ぶ */
+/** 一巡するまでは未着手のものだけを出し、一巡してからは苦手なものを重めに出す。
+    直近に出したものを避ける recentCases はメモリ上にしかなく、ページを開き直すと
+    消える。それだけに頼っていると、途中でサイトを離れたときに既出が再登場して
+    全問を回りきれない。解答の記録は残るので、そちらを見て未着手を優先する。 */
 function drawCase() {
-  const fresh = CASES.filter(c => !state.recentCases.includes(c.id));
-  const pool = fresh.length ? fresh : CASES;
   const scores = caseScores();
+  const fresh = CASES.filter(c => !state.recentCases.includes(c.id));
+  const base = fresh.length ? fresh : CASES;
+  const unseen = base.filter(c => !scores.has(c.id));
+  const pool = unseen.length ? unseen : base;
   const c = weightedPick(pool, pool.map(x => caseWeight(scores.get(x.id))));
   state.recentCases = [c.id, ...state.recentCases.filter(x => x !== c.id)]
     .slice(0, Math.max(1, CASES.length - 1));
