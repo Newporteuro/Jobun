@@ -32,8 +32,8 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260824h";
-import { scoreCase } from "./js/drill.js?v=20260824h";
+import { CASES }     from "./js/cases.js?v=20260824i";
+import { scoreCase } from "./js/drill.js?v=20260824i";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -163,6 +163,10 @@ const PROBES = [
   ["minpo-1028",  "Bは甲建物の所有権を取得しなければ住み続けることはできない。", 0, 0],
   ["minpo-1028",  "Bは相続開始時に居住していたが、遺産分割では配偶者居住権を取得できない。", 0, 13],
   ["minpo-1028",  "相続開始の時に住んでいた配偶者は、遺贈により無償で使用収益する権利を得る。", 20, 20],
+  // 居住の書き方の幅。ただし「死亡後に住み始めた」は要件を満たさない
+  ["minpo-1028",  "Bは、Aの死亡以前から甲建物に居住しており、配偶者居住権を取得することができる。", 14, 14],
+  ["minpo-1028",  "Aの生前から同居していたBは、遺産分割により配偶者居住権を取得する。", 20, 20],
+  ["minpo-1028",  "Bは、Aの死亡後に甲建物へ移り住んだので、遺産分割により配偶者居住権を取得する。", 0, 13],
 ];
 {
   const lines = [];
