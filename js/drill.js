@@ -5,7 +5,7 @@
    問題を組み立てる。採点の一致率もここ。
    通信もしないし、画面にも触らない ── 入力と出力だけの世界。
    ══════════════════════════════════════════════ */
-import { fullText } from "./sources.js?v=20260824b";   // ?v= は ui.js の VERSION と揃える
+import { fullText } from "./sources.js?v=20260824c";   // ?v= は ui.js の VERSION と揃える
 
 /* ══════════════════════════════════════════════
    条文の切り分けと、空欄にしてよい部分の判定
@@ -325,29 +325,171 @@ export function makeDescriptive(article, showHint, key) {
   return null;
 }
 
-/* 採点キーワードは正規表現として扱う。「訴えを提起」と「訴訟を提起」のような
+/* ══════════════════════════════════════════════
+   事例記述の採点
+
+   採点キーワードは正規表現として扱う。「訴えを提起」と「訴訟を提起」のような
    表記のゆれを列挙で潰すのは無理があるので、1つの式で吸収する。
-   正規表現として壊れている場合は、そのまま文字列として照合する。 */
-const matcherCache = new Map();
-function matcher(w) {
-  let re = matcherCache.get(w);
-  if (!re) {
-    try { re = new RegExp(w); }
-    catch (e) { re = new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")); }
-    matcherCache.set(w, re);
+   正規表現として壊れている場合は、そのまま文字列として照合する。
+
+   もっとも、式をどれだけ丁寧に書いても、同じ中身を別の言い回しで書いた解答は
+   取りこぼす。実際に落ちたのは、次の4つの型だった。
+
+     送り仮名と助詞  「償うことのできない」と「償うことができない」
+     語の割り込み    「他に適当な方法」と「他に適当な救済方法」
+     並立の語順      「利益の内容及び性質」と「利益の性質及び内容」
+     可能動詞の否定  「拒むことができない」と「拒めず」
+
+   どれも条文の言い回しを少し崩しただけで、書いてあることは変わらない。
+   そこで、解答とキーワードの双方に同じ言い換えをかけたものでも照合する。
+   言い換えた形は「追加で試す」だけで、元のままの照合も必ず行うから、
+   拾えるものが増えることはあっても、減ることはない。
+
+   否定を崩す言い換えだけは入れない。「拒める」と「拒めない」を取り違えると
+   誤答に点を与えてしまう。
+   ══════════════════════════════════════════════ */
+
+/* 送り仮名のゆれ。送らない形に寄せる（左から順に適用する） */
+const OKURIGANA = [
+  ["取り消","取消"], ["取消し","取消"], ["明け渡","明渡"], ["明渡し","明渡"],
+  ["差し引","差引"], ["差引き","差引"], ["申し立て","申立"], ["申立て","申立"],
+  ["申し出","申出"], ["引き渡","引渡"], ["引渡し","引渡"], ["支払い","支払"],
+  ["立ち入","立入"], ["立入り","立入"], ["取り扱","取扱"], ["取扱い","取扱"],
+  ["差し押さえ","差押"], ["差押え","差押"], ["打ち消","打消"], ["打消し","打消"],
+  ["譲り渡","譲渡"], ["買い受け","買受"], ["貸し付け","貸付"],
+  ["申し込","申込"], ["申込み","申込"], ["受け取","受取"], ["立ち退","立退"],
+  ["割り当て","割当"], ["見做","みな"], ["看做","みな"],
+];
+
+/* 「ことができる」「ことのできる」「事が出来る」を「できる」に揃える */
+const KOTO_DEKIRU = /(こと|事)(が|の|は|も)?(でき|出来)/g;
+
+/* 「対抗し得ない」を「対抗できない」に揃える */
+const SHIURU = /(?:為し得|なし得|し得|しえ)/g;
+
+/* 「六箇月」「6ヶ月」を「6月」に揃える。助数詞のかなを落としてから数字に直す。
+   先読みを付けているのは、「一定」「一部」まで数字にしてしまわないため。 */
+const COUNTER_KANA = /(?:箇|ヶ|ケ|か|カ|个)(?=[月年日])/g;
+const KANSUJI = {"二十":"20","三十":"30","四十":"40","五十":"50",
+  "十":"10","一":"1","二":"2","三":"3","四":"4",
+  "五":"5","六":"6","七":"7","八":"8","九":"9"};
+const KANSUJI_RE = /(二十|三十|四十|五十|十|[一二三四五六七八九])(?=[月年日])/g;
+
+function loosen(s) {
+  let t = s;
+  for (const [from, to] of OKURIGANA) t = t.split(from).join(to);
+  t = t.replace(SHIURU, "でき");
+  t = t.replace(KOTO_DEKIRU, "でき");
+  t = t.replace(COUNTER_KANA, "");
+  return t.replace(KANSUJI_RE, m => KANSUJI[m]);
+}
+
+/* 「拒めず」のような可能動詞の否定を「拒むことができない」に開く。
+   え段を う段に戻して「ことができない」を足すだけで、否定はそのまま残す。
+
+   「れ」と「ね」は扱わない。「免れない」「兼ねない」は形のうえでは同じ並びなのに
+   意味は逆（免れられない＝負う）で、開いてしまうと「できない」を書いていない解答に
+   否定の要素を与えてしまう。「認められない」のように拾いたいものは、
+   各問題のキーワードにそのまま並べてある。 */
+const E_TO_U = {え:"う",け:"く",げ:"ぐ",せ:"す",て:"つ",へ:"ふ",べ:"ぶ",め:"む"};
+const POTENTIAL_NEG = /([ぁ-んァ-ヴ一-龥])([えけげせてへべめ])(?:ない|ず|ぬ|ません|なかった)/g;
+const expandNegation = s =>
+  s.replace(POTENTIAL_NEG, (_, stem, e) => stem + E_TO_U[e] + "ことができない");
+
+/* 正規表現の記号。ここに当たらない文字の連なりだけを言い換えの対象にする */
+const RE_META = /[\\^$.|?*+()[\]{}]/;
+const NOT_META = "[^\\\\^$.|?*+()[\\]{}]";
+
+/** 正規表現のうち、記号ではない部分にだけ言い換えをかける */
+function loosenPattern(p) {
+  let out = "", run = "";
+  for (const ch of p) {
+    if (RE_META.test(ch)) { out += loosen(run) + ch; run = ""; }
+    else run += ch;
   }
-  return re;
+  return out + loosen(run);
+}
+
+/** 「A.{0,n}B」を「B.{0,n}A」にする。並立の語順が入れ替わった解答を拾う */
+const TWO_TERMS = new RegExp(`^(${NOT_META}+)\\.\\{0,(\\d+)\\}(${NOT_META}+)$`);
+function flipTerms(p) {
+  const m = TWO_TERMS.exec(p);
+  return m ? `${m[3]}.{0,${m[2]}}${m[1]}` : null;
+}
+
+/** 記号を含まない4字以上のキーワードに、1箇所だけ4字までの割り込みを許す。
+    「適当な方法」で「適当な救済方法」を拾うための、最後の手段。 */
+function allowInsertion(p) {
+  const c = [...p];
+  if (RE_META.test(p) || c.length < 4) return null;
+  const alts = [];
+  for (let i = 1; i < c.length; i++)
+    alts.push(c.slice(0, i).join("") + ".{0,4}" + c.slice(i).join(""));
+  return alts.join("|");
+}
+
+function toRegExp(w) {
+  try { return new RegExp(w); }
+  catch (e) { return new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")); }
+}
+
+/* キーワード1つにつき、照合に使う式は数本になる。作り直さないよう覚えておく */
+const formsCache = new Map();
+function forms(w) {
+  let f = formsCache.get(w);
+  if (f) return f;
+  const strict = [w];
+  const l = loosenPattern(w);
+  if (l !== w) strict.push(l);
+  for (const p of strict.slice()) { const t = flipTerms(p); if (t) strict.push(t); }
+  const loose = [];
+  for (const p of strict) { const ins = allowInsertion(p); if (ins) loose.push(ins); }
+  f = {
+    strict: [...new Set(strict)].map(toRegExp),
+    loose:  [...new Set(loose)].map(toRegExp),
+  };
+  formsCache.set(w, f);
+  return f;
+}
+
+/** 解答を、照合に使う何通りかの書き方に開く */
+function readings(input) {
+  const base = normalize(input);
+  const neg = expandNegation(base);
+  return [...new Set([base, loosen(base), neg, loosen(neg)])];
+}
+
+/** キーワード w が、解答のいずれかの書き方に現れるか */
+function appears(w, texts) {
+  const f = forms(w);
+  return f.strict.some(re => texts.some(t => re.test(t)))
+      || f.loose.some(re => texts.some(t => re.test(t)));
 }
 
 /** 事例記述の要素採点。本試験と同じく要素ごとの部分点で採る */
 export function scoreCase(input, points) {
-  const text = normalize(input);
+  const texts = readings(input);
   const detail = points.map(p => ({
     label: p.label,
     example: p.example || "",
     point: p.point,
-    hit: p.words.some(w => matcher(w).test(text)),
+    hit: p.words.some(w => appears(w, texts)),
+    implied: false,
   }));
+
+  /* 他の要素を書いた時点で当然そこに含まれている、という要素を拾う。
+     「直接自己への明渡しを請求できる」と書いてあれば占有の排除も求めている。
+     含意が連鎖することがあるので、増えなくなるまで回す。 */
+  const found = new Map(detail.map(d => [d.label, d]));
+  for (let again = true; again; ) {
+    again = false;
+    points.forEach((p, i) => {
+      if (detail[i].hit || !p.impliedBy) return;
+      if (!p.impliedBy.some(l => found.get(l) && found.get(l).hit)) return;
+      detail[i].hit = true; detail[i].implied = true; again = true;
+    });
+  }
+
   const full = points.reduce((a, p) => a + p.point, 0);
   const earned = detail.reduce((a, d) => a + (d.hit ? d.point : 0), 0);
   return {detail, earned, full, pct: full ? Math.round(earned / full * 100) : 0};

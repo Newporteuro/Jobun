@@ -7,18 +7,18 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260824b";
+export const VERSION = "20260824c";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260824b";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260824c";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260824b";
+} from "./sources.js?v=20260824c";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260824b";
-import { CASES } from "./cases.js?v=20260824b";
+} from "./drill.js?v=20260824c";
+import { CASES } from "./cases.js?v=20260824c";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -472,6 +472,8 @@ function gradeCase(input) {
       <div class="point ${d.hit ? "hit" : "miss"}">
         <span class="mk">${d.hit ? "○" : "×"}</span>
         <span class="lb">${esc(d.label)}${
+          // その要素を直接は書いていないが、他の記述に含まれているとみた場合
+          d.implied ? `<span class="eg">他の要素の記述に含まれるものとして加点</span>` : ""}${
           // 落ちた要素は、どう書けば得点になったのかを示す
           !d.hit && d.example ? `<span class="eg">例：${esc(d.example)}</span>` : ""}</span>
         <span class="pt">${d.hit ? "+" : ""}${d.hit ? d.point : 0} / ${d.point}</span>
@@ -508,7 +510,8 @@ function buildLog(c, s, input) {
     `設問: ${c.question}`,
     `私の解答(${[...input.replace(/\n/g, "")].length}字): ${input.trim()}`,
     `得点: ${s.earned}/${s.full}`,
-    ...s.detail.map(d => `  ${d.hit ? "○" : "×"} ${d.label} (${d.hit ? d.point : 0}/${d.point})`),
+    ...s.detail.map(d =>
+      `  ${d.hit ? "○" : "×"} ${d.label}${d.implied ? "（含意）" : ""} (${d.hit ? d.point : 0}/${d.point})`),
     `解答例: ${c.answer}`,
     "コメント: ",
     "",
