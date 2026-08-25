@@ -32,9 +32,9 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260825x";
-import { HANREI }    from "./js/hanrei.js?v=20260825x";
-import { scoreCase } from "./js/drill.js?v=20260825x";
+import { CASES }     from "./js/cases.js?v=20260825y";
+import { HANREI }    from "./js/hanrei.js?v=20260825y";
+import { scoreCase } from "./js/drill.js?v=20260825y";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -345,6 +345,10 @@ const PROBES = [
   // 管理と変更を取り違えた答案。要素の語はすべて揃うので、係り先を見ないと14点になる
   ["minpo-252",   "管理に関する事項は共有者全員の同意を要し、変更は持分の過半数で決する。", 0, 0],
   ["minpo-252",   "管理も変更も持分の過半数で決すればよく、共有者全員の同意は不要である。", 0, 7],
+  // ── 8/25 14:36 のログ68件を今の採点器で洗い直して出た1件 ──
+  // 「第三者Cが登記を備え、Cはそれにより保護される」で、第三者と保護が14字離れていた
+  ["minpo-545",   "第三者Cが登記を備え、Cはそれにより保護されるため、Aは返還を請求できない。", 20, 20],
+  ["minpo-545",   "第三者Cは保護されないので、Aは甲土地の返還を請求できる。", 0, 0],
 ];
 {
   const lines = [];
