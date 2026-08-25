@@ -32,9 +32,9 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260825i";
-import { HANREI }    from "./js/hanrei.js?v=20260825i";
-import { scoreCase } from "./js/drill.js?v=20260825i";
+import { CASES }     from "./js/cases.js?v=20260825k";
+import { HANREI }    from "./js/hanrei.js?v=20260825k";
+import { scoreCase } from "./js/drill.js?v=20260825k";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -420,6 +420,43 @@ const PROBES = [
   // ○ばかり、×ばかりだと、中身を読まずに当てられてしまう
   lines.push(`${mark(maru > 0 && batsu > 0 && Math.abs(maru - batsu) <= items / 2)} ○と×の偏りが半数以内`);
   section("F. 判例○×のデータ整合", lines);
+}
+
+/* ══════ G. 多肢選択のデータ整合 ══════ */
+{
+  const lines = [];
+  const withT = HANREI.filter(h => h.tashi);
+  for (const h of withT) {
+    const t = h.tashi, B = t.blanks || [];
+    const marks = [...t.passage.matchAll(/｛([^｝]+)｝/g)].map(m => m[1]);
+    lines.push(`${mark(B.length >= 6)} ${h.id} 空欄の候補が6件以上（${B.length}件）`);
+    // 候補が4件ちょうどだと毎回同じ4箇所になり、判旨の理解ではなく4語の暗記になる
+    lines.push(`${mark(marks.length === B.length)} ${h.id} 本文の｛｝と blanks が一致（本文${marks.length}／定義${B.length}）`);
+    lines.push(`${mark(B.every(b => marks.includes(b.word)))} ${h.id} 定義した語がすべて本文にある`);
+    const all = B.flatMap(b => [b.word, ...(b.decoys || [])]);
+    lines.push(`${mark(new Set(all).size === all.length)} ${h.id} 正解と撹乱肢に重複がない（${all.length}語）`);
+    lines.push(`${mark(B.every(b => (b.decoys || []).length === 4))} ${h.id} 各空欄に撹乱肢が4語ずつ`);
+    // どの4つを選んでも語群がちょうど20語になること
+    lines.push(`${mark(B.every(b => (b.decoys || []).length === 4))} ${h.id} どの組合せでも語群は20語`);
+    // 同じ語が本文に2回出ると、空欄にしても別の箇所に答えが見えてしまう
+    const twice = B.filter(b => t.passage.split(b.word).length - 1 > 1);
+    lines.push(`${mark(!twice.length)} ${h.id} 空欄の語が本文に1回しか出ない`
+      + (twice.length ? `  <span class="ng">${esc(twice.map(b => b.word).join("／"))}</span>` : ""));
+    lines.push(`${mark(B.every(b => b.why && b.why.length >= 30))} ${h.id} 空欄ごとの理由がある`);
+    lines.push(`${mark(B.every(b => Number.isFinite(b.weight) && b.weight >= 1))} ${h.id} 重要度が付いている`);
+    lines.push(`${mark(!!t.source)} ${h.id} 法廷意見か別意見かの別（${esc(t.source || "")}）`);
+    lines.push(`${mark(t.passage.replace(/[｛｝]/g, "").length >= 120)} ${h.id} 本文が120字以上（${t.passage.replace(/[｛｝]/g, "").length}字）`);
+    // 同義語を撹乱肢にすると、判旨の理解ではなく丸暗記を問うことになる
+    const near = B.filter(b => (b.decoys || []).some(d =>
+      (d.length >= 2 && b.word.length >= 2) &&
+      (d.includes(b.word) || b.word.includes(d))));
+    lines.push(`${mark(!near.length)} ${h.id} 撹乱肢が正解を含む同義語になっていない`
+      + (near.length ? `  <span class="ng">${esc(near.map(b => b.word).join("／"))}</span>` : ""));
+    lines.push(`     <span class="dim">組合せ ${B.length}件から4件 = ${
+      (n => { let c = 1; for (let i = 0; i < 4; i++) c = c * (n - i) / (i + 1); return Math.round(c); })(B.length)} 通り</span>`);
+  }
+  if (!withT.length) lines.push(`${mark(true)} 多肢選択のデータはまだない`);
+  section("G. 多肢選択のデータ整合", lines);
 }
 
 /* ══════ まとめ ══════ */

@@ -7,19 +7,19 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260825i";
+export const VERSION = "20260825k";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825i";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825k";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260825i";
+} from "./sources.js?v=20260825k";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260825i";
-import { CASES } from "./cases.js?v=20260825i";
-import { HANREI } from "./hanrei.js?v=20260825i";
+} from "./drill.js?v=20260825k";
+import { CASES } from "./cases.js?v=20260825k";
+import { HANREI } from "./hanrei.js?v=20260825k";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -36,6 +36,8 @@ const state = {
   recentCases: [],       // 直近に出した事例問題のid
   hanrei: null,          // 出題中の判例○×（判例と主張の組）
   recentHanrei: [],      // 直近に出した主張のkey
+  tashi: null,           // 出題中の多肢選択
+  recentTashi: [],       // 直近に出した多肢選択のid
   maru: "",              // ○×の選択
   kobun: true,           // 判例○×を判決文型で出すか
 };
@@ -52,6 +54,7 @@ const MODE_NOTE = {
   descriptive: "条件節を残し、条文の効果部分を40字程度で書かせます。",
   case:        "本試験の記述式と同じ形式です。事例を読んで40字程度で答え、要素ごとの部分点で20点満点の採点をします。まだ解いていない問題と、前回の得点が低かった問題を重めに出します。",
   doctrine:    "Wikibooks の解説欄から判例法理を出題します。編集者による記述のため、条文と違い誤りを含む可能性があります。",
+  tashi:       "本試験の問41にあたる形式です。判決文の4箇所を空欄にし、20語の語群から選びます。各2点の8点。",
   hanrei:      "憲法の判例について、一つの主張が判例に照らして正しいかを○×で答えます。本試験の5肢択一は独立した○×判断が5つ並んだものなので、その一つ分にあたります。",
   recall:      "条見出しだけを頼りに、条文全体を書き起こします。",
 };
@@ -59,7 +62,7 @@ const MODE_NOTE = {
 /* 出題面に出す形式名。いま何を解いているのかを問題側にも表示する */
 const MODE_LABEL = {
   blank: "穴埋め", descriptive: "条文40字", case: "事例記述",
-  doctrine: "判例法理", recall: "全文再現", hanrei: "判例○×",
+  doctrine: "判例法理", recall: "全文再現", hanrei: "判例○×", tashi: "多肢選択",
 };
 
 /* ── 初期化 ── */
@@ -122,7 +125,7 @@ function bindSwitch(sel, fn) {
 
 function syncPanes() {
   // 事例記述は自前の問題バンクから出すので、出題元の選択は使わない
-  const isCase = state.mode === "case" || state.mode === "hanrei";
+  const isCase = ["case","hanrei","tashi"].includes(state.mode);
   const isKijutsu = state.mode === "case";
   $("#sourceLabel").hidden = isCase;
   $("#segSource").hidden  = isCase;
@@ -214,6 +217,7 @@ async function draw() {
   try {
     if (state.mode === "case")   { await presentCase(); return; }
     if (state.mode === "hanrei") { presentHanrei(); return; }
+    if (state.mode === "tashi")  { presentTashi();  return; }
     if (state.source === "number") {
       const id = $("#manualLaw").value;
       const law = Object.values(LAWS).find(l => l.id === id);
@@ -434,6 +438,170 @@ function buildHanreiLog(h, it, key, chose, correct) {
     `私の解答: ${chose}　／　正解: ${it.ok ? "○" : "×"}`,
     `判定: ${correct ? "正解" : "不正解"}`,
     `理由: ${it.why}`,
+    "コメント: ",
+    "",
+  ].join("\n");
+}
+
+/* ══════════════════════════════════════════════
+   多肢選択式（本試験の問41にあたる）
+
+   判決文の4箇所を空欄にし、20語の語群から選ばせる。各2点で8点。
+   材料は条文ではなく判決文で、法廷意見とは限らない（令和4年問41は宇賀補足意見、
+   平成23年問41は伊藤補足意見が出典だった）。
+
+   撹乱肢は、その空欄に文法的にも意味的にも入ってしまう同系語で揃える。
+   ランダムな法律用語を混ぜるのではないので、消去法が効かない。
+   ══════════════════════════════════════════════ */
+
+const MARU = ["ア", "イ", "ウ", "エ"];
+const BLANK_RE = /｛([^｝]+)｝/g;
+
+/** tashi を持つ判例だけが多肢選択の対象になる */
+const tashiPool = () => HANREI.filter(h => h.tashi && h.tashi.blanks);
+
+/** 記録から、空欄ごとの直近の正誤を読む。key は「判例id#語」 */
+function tashiScores() {
+  const m = new Map();
+  for (const text of readLog()) {
+    const id = (/\[多肢 ([^\]]+)\]/.exec(text) || [])[1];
+    if (!id) continue;
+    for (const line of text.split("\n")) {
+      const r = /^\s*([○×])\s*[アイウエ]\s*正解「([^」]+)」/.exec(line);
+      if (r) m.set(`${id}#${r[2]}`, r[1] === "○" ? 1 : 0);
+    }
+  }
+  return m;
+}
+
+/** 毎回ちがう4箇所を抜く。重要な語ほど、そして落とした語ほど選ばれやすい */
+function chooseBlanks(h) {
+  const scores = tashiScores();
+  const cand = h.tashi.blanks.slice();
+  const picked = [];
+  while (picked.length < 4 && cand.length) {
+    const w = cand.map(b => {
+      const s = scores.get(`${h.id}#${b.word}`);
+      const miss = s === undefined ? 2 : s ? 1 : 4;   // 未出題2・正解1・誤答4
+      return (b.weight || 1) * miss;
+    });
+    const b = weightedPick(cand, w);
+    picked.push(b);
+    cand.splice(cand.indexOf(b), 1);
+  }
+  // 本文に現れる順に並べ替える。ア・イ・ウ・エが前から順に付くように
+  const order = [...h.tashi.passage.matchAll(BLANK_RE)].map(m => m[1]);
+  picked.sort((x, y) => order.indexOf(x.word) - order.indexOf(y.word));
+  return picked;
+}
+
+const shuffle = a => { const r = a.slice();
+  for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; }
+  return r; };
+
+function drawTashi() {
+  const pool = tashiPool();
+  const fresh = pool.filter(h => !state.recentTashi.includes(h.id));
+  const h = pick(fresh.length ? fresh : pool);
+  state.recentTashi = [h.id, ...state.recentTashi.filter(x => x !== h.id)]
+    .slice(0, Math.max(1, pool.length - 1));
+  const blanks = chooseBlanks(h);
+  // 語群は、選んだ4つの正解＋それぞれの撹乱肢4語＝20語
+  const choices = shuffle(blanks.flatMap(b => [b.word, ...b.decoys]));
+  return {h, blanks, choices};
+}
+
+function presentTashi() {
+  if (!tashiPool().length) { setStatus("多肢選択の問題がまだありません。"); return; }
+  const q = drawTashi();
+  state.tashi = q;
+  state.drill = {mode:"tashi", answer:"", paragraphIndex:-1};
+  state.ref = null; state.article = null;
+  setStatus("");
+
+  const {h, blanks, choices} = q;
+  // 選ばれた語は選択欄に、選ばれなかった候補は普通の本文に戻す
+  let n = 0;
+  const body = esc(h.tashi.passage).replace(BLANK_RE, (_, word) => {
+    const i = blanks.findIndex(b => b.word === word);
+    if (i < 0) return esc(word);
+    const m = MARU[i];
+    return `<select class="fill" data-m="${m}"><option value="">［${m}］</option>` +
+      choices.map((w, k) => `<option value="${esc(w)}">${k + 1}　${esc(w)}</option>`).join("") +
+      `</select>`;
+  });
+
+  const html = `
+    <div class="artline">
+      <span class="artno">多肢選択式　${esc(h.field)}</span>
+      <span class="artcap">4空欄・各2点・8点</span>
+    </div>
+    <div class="meta">
+      <span class="modetag">${esc(MODE_LABEL.tashi)}</span>
+      <span>次の文章の空欄に語群から適する語を入れてください</span>
+    </div>
+    <div class="facts">${esc(h.facts)}</div>
+    <div class="ask passage">${body}</div>
+    <div class="answer">
+      <p class="label">語群</p>
+      <div class="glossary">${choices.map((w, i) =>
+        `<span class="gw">${i + 1}　${esc(w)}</span>`).join("")}</div>
+      <button class="primary" id="grade" style="margin-top:16px">採点する</button>
+    </div>
+    <div id="result"></div>`;
+
+  const sheet = $("#sheet");
+  sheet.innerHTML = html;
+  sheet.hidden = false;
+  $("#cases").hidden = true;
+  $("#grade").addEventListener("click", gradeTashi);
+  sheet.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function gradeTashi() {
+  const {h, blanks} = state.tashi;
+  const chosen = {};
+  for (const sel of document.querySelectorAll("#sheet select.fill")) chosen[sel.dataset.m] = sel.value;
+  if (blanks.some((_, i) => !chosen[MARU[i]])) { setStatus("空欄をすべて選んでください。"); return; }
+  state.revealed = true;
+
+  const earned = blanks.filter((b, i) => chosen[MARU[i]] === b.word).length * 2;
+  const cls = earned >= 7 ? "hi" : earned >= 4 ? "mid" : "lo";
+
+  const html = `
+    <div class="score"><span class="label" style="margin:0">得点</span>
+      <span class="n ${cls}">${earned}<span style="font-size:18px">/8点</span></span></div>
+    <p class="topicline">${esc(h.caseName)}（${esc(h.cite)}）　${esc(h.tashi.source)}</p>
+    <div class="points">` +
+    blanks.map((b, i) => {
+      const m = MARU[i], ok = chosen[m] === b.word;
+      return `
+      <div class="point ${ok ? "hit" : "miss"}">
+        <span class="mk">${ok ? "○" : "×"}</span>
+        <span class="lb">${m}　${esc(b.word)}${
+          ok ? "" : `<span class="eg">選んだのは「${esc(chosen[m])}」</span>`}
+          <span class="why">${esc(b.why)}</span></span>
+        <span class="pt">${ok ? "+2" : "0"} / 2</span>
+      </div>`;
+    }).join("") + `
+    </div>
+    <div class="commentary">${bold(esc(h.commentary))}</div>`;
+
+  state.lastLog = buildTashiLog(h, blanks, chosen, earned);
+  appendLog(state.lastLog);
+  showResult(html);
+}
+
+function buildTashiLog(h, blanks, chosen, earned) {
+  return [
+    "────────────────",
+    `${new Date().toLocaleString("ja-JP")}　版 ${VERSION}`,
+    `[多肢 ${h.id}] ${h.caseName}（${h.cite}）${h.tashi.source}`,
+    `得点: ${earned}/8`,
+    ...blanks.map((b, i) => {
+      const m = MARU[i], ok = chosen[m] === b.word;
+      return `  ${ok ? "○" : "×"} ${m} 正解「${b.word}」` + (ok ? "" : ` ／ 選んだのは「${chosen[m]}」`);
+    }),
     "コメント: ",
     "",
   ].join("\n");
