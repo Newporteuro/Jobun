@@ -32,9 +32,9 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260825z";
-import { HANREI }    from "./js/hanrei.js?v=20260825z";
-import { scoreCase } from "./js/drill.js?v=20260825z";
+import { CASES }     from "./js/cases.js?v=20260826a";
+import { HANREI }    from "./js/hanrei.js?v=20260826a";
+import { scoreCase } from "./js/drill.js?v=20260826a";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -349,6 +349,10 @@ const PROBES = [
   // 「第三者Cが登記を備え、Cはそれにより保護される」で、第三者と保護が14字離れていた
   ["minpo-545",   "第三者Cが登記を備え、Cはそれにより保護されるため、Aは返還を請求できない。", 20, 20],
   ["minpo-545",   "第三者Cは保護されないので、Aは甲土地の返還を請求できる。", 0, 0],
+  // ── 本試験型の設問で解いてもらった3問（2026-08-25）。いずれも採点の欠陥は出なかった ──
+  ["minpo-388",   "抵当権設定時に、土地上に建物が存在し、同一所有者に属し、競売で所有者を異にすること。", 20, 20],
+  ["gyoso-25",    "重大な損害の発生を避けるため、緊急の必要があり、申立てにより決定できる。職権ではできない。", 20, 20],
+  ["minpo-452",   "催告の抗弁、検索の抗弁を主張でき、債務者の資力と執行が容易と証明しなければならない。", 20, 20],
 ];
 {
   const lines = [];
