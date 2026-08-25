@@ -32,8 +32,9 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260825g";
-import { scoreCase } from "./js/drill.js?v=20260825g";
+import { CASES }     from "./js/cases.js?v=20260825h";
+import { HANREI }    from "./js/hanrei.js?v=20260825h";
+import { scoreCase } from "./js/drill.js?v=20260825h";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -382,6 +383,39 @@ const PROBES = [
        .concat(rows.map(r => `  [${r.n}問] ${r.id} 「${esc(r.label)}」 ${r.pt}点`))
     : [`${mark(true)} 3問以上に当たる要素はない`];
   section("E. 語が緩い要素の目安", lines);
+}
+
+/* ══════ F. 判例○×のデータ整合 ══════ */
+{
+  const lines = [];
+  const ids = new Set(), keys = new Set();
+  let items = 0, maru = 0, batsu = 0;
+  for (const h of HANREI) {
+    const need = ["id","field","theme","topic","caseName","cite","facts","commentary"];
+    const miss = need.filter(k => !h[k]);
+    lines.push(`${mark(!miss.length)} ${h.id} 必須項目` + (miss.length ? `  <span class="ng">欠け: ${miss.join(" ")}</span>` : ""));
+    lines.push(`${mark(!ids.has(h.id))} ${h.id} idが一意`);
+    ids.add(h.id);
+    // 出典は「最大判令2.11.25」の形。あとから原典に当たれるようにするため
+    lines.push(`${mark(/^最(大)?(判|決)(昭|平|令)\d+\.\d+\.\d+$/.test(h.cite))} ${h.id} 出典の書式 ${esc(h.cite)}`);
+    lines.push(`${mark(Array.isArray(h.items) && h.items.length >= 2)} ${h.id} 主張が2件以上（${h.items ? h.items.length : 0}件）`);
+    (h.items || []).forEach((it, i) => {
+      items++; it.ok ? maru++ : batsu++;
+      const key = `${h.id}#${i}`;
+      lines.push(`${mark(typeof it.ok === "boolean")} ${key} ok が真偽値`);
+      lines.push(`${mark(!!it.claim && !!it.why)} ${key} claim と why がある`);
+      // 主張の中に「判例に照らし」などの設問文が混ざっていないこと。主張だけを置く
+      lines.push(`${mark(!/でしょうか|ですか|正しいか/.test(it.claim))} ${key} 主張に設問文が混ざっていない`);
+      // 誤りの主張には、どこがどう違うのかが要る。「×」だけでは学習にならない
+      lines.push(`${mark(it.ok || it.why.length >= 30)} ${key} 誤りの主張に理由がある（${it.why.length}字）`);
+      lines.push(`${mark(!keys.has(key))} ${key} keyが一意`);
+      keys.add(key);
+    });
+  }
+  lines.push(`<span class="dim">判例 ${HANREI.length} 件 / 主張 ${items} 件（○ ${maru} ／ × ${batsu}）</span>`);
+  // ○ばかり、×ばかりだと、中身を読まずに当てられてしまう
+  lines.push(`${mark(maru > 0 && batsu > 0 && Math.abs(maru - batsu) <= items / 2)} ○と×の偏りが半数以内`);
+  section("F. 判例○×のデータ整合", lines);
 }
 
 /* ══════ まとめ ══════ */

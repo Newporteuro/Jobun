@@ -7,18 +7,19 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260825g";
+export const VERSION = "20260825h";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825g";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825h";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260825g";
+} from "./sources.js?v=20260825h";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260825g";
-import { CASES } from "./cases.js?v=20260825g";
+} from "./drill.js?v=20260825h";
+import { CASES } from "./cases.js?v=20260825h";
+import { HANREI } from "./hanrei.js?v=20260825h";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -33,6 +34,9 @@ const state = {
   lastDoctrine: null,
   kase: null,            // 出題中の事例問題
   recentCases: [],       // 直近に出した事例問題のid
+  hanrei: null,          // 出題中の判例○×（判例と主張の組）
+  recentHanrei: [],      // 直近に出した主張のkey
+  maru: "",              // ○×の選択
 };
 
 const RECENT_LIMIT = 40;
@@ -47,13 +51,14 @@ const MODE_NOTE = {
   descriptive: "条件節を残し、条文の効果部分を40字程度で書かせます。",
   case:        "本試験の記述式と同じ形式です。事例を読んで40字程度で答え、要素ごとの部分点で20点満点の採点をします。まだ解いていない問題と、前回の得点が低かった問題を重めに出します。",
   doctrine:    "Wikibooks の解説欄から判例法理を出題します。編集者による記述のため、条文と違い誤りを含む可能性があります。",
+  hanrei:      "憲法の判例について、一つの主張が判例に照らして正しいかを○×で答えます。本試験の5肢択一は独立した○×判断が5つ並んだものなので、その一つ分にあたります。",
   recall:      "条見出しだけを頼りに、条文全体を書き起こします。",
 };
 
 /* 出題面に出す形式名。いま何を解いているのかを問題側にも表示する */
 const MODE_LABEL = {
   blank: "穴埋め", descriptive: "条文40字", case: "事例記述",
-  doctrine: "判例法理", recall: "全文再現",
+  doctrine: "判例法理", recall: "全文再現", hanrei: "判例○×",
 };
 
 /* ── 初期化 ── */
@@ -115,7 +120,8 @@ function bindSwitch(sel, fn) {
 
 function syncPanes() {
   // 事例記述は自前の問題バンクから出すので、出題元の選択は使わない
-  const isCase = state.mode === "case";
+  const isCase = state.mode === "case" || state.mode === "hanrei";
+  const isKijutsu = state.mode === "case";
   $("#sourceLabel").hidden = isCase;
   $("#segSource").hidden  = isCase;
   $("#paneRange").hidden  = isCase || state.source !== "range";
@@ -123,8 +129,8 @@ function syncPanes() {
   $("#modeNote").textContent = MODE_NOTE[state.mode];
   $("#modeNote").className = "hint" + (state.mode === "doctrine" ? " warn" : "");
   $("#optHint").hidden   = isCase || state.mode === "recall";
-  $("#optGuided").hidden = !isCase;
-  $("#guidedNote").hidden = !isCase;
+  $("#optGuided").hidden = !isKijutsu;
+  $("#guidedNote").hidden = !isKijutsu;
   $("#optEnding").hidden = state.mode !== "blank";
   $("#endingNote").hidden = state.mode !== "blank";
 }
@@ -201,7 +207,8 @@ async function draw() {
   setStatus(`<p class="msg info"><span class="spin"></span> 条文を取得中…</p>`);
 
   try {
-    if (state.mode === "case") { await presentCase(); return; }
+    if (state.mode === "case")   { await presentCase(); return; }
+    if (state.mode === "hanrei") { presentHanrei(); return; }
     if (state.source === "number") {
       const id = $("#manualLaw").value;
       const law = Object.values(LAWS).find(l => l.id === id);
@@ -298,6 +305,125 @@ async function presentCase() {
 
   setStatus("");
   renderSheet();
+}
+
+/* ══════════════════════════════════════════════
+   判例○×
+
+   1件の主張について○か×かを選ばせる。採点は一致か不一致かだけなので、
+   事例記述のような正規表現の照合はいっさい要らない。
+   ══════════════════════════════════════════════ */
+
+/** 判例×主張の全組み合わせ。key は「判例id#主張の番号」 */
+function hanreiPool() {
+  const out = [];
+  for (const h of HANREI)
+    h.items.forEach((it, i) => out.push({h, it, key: `${h.id}#${i}`}));
+  return out;
+}
+
+/** 記録から、主張ごとの直近の正誤を読む。事例記述と同じく最新のものが残る */
+function hanreiScores() {
+  const m = new Map();
+  for (const text of readLog()) {
+    const key = (/\[判例 ([^\]]+)\]/.exec(text) || [])[1];
+    const res = /判定:\s*(正解|不正解)/.exec(text);
+    if (!key || !res) continue;
+    m.set(key, res[1] === "正解" ? 1 : 0);
+  }
+  return m;
+}
+
+/** 未着手を先に、間違えたものを重めに。事例記述の caseWeight と同じ考え方 */
+function drawHanrei() {
+  const scores = hanreiScores();
+  const pool = hanreiPool();
+  const fresh = pool.filter(p => !state.recentHanrei.includes(p.key));
+  const base = fresh.length ? fresh : pool;
+  const unseen = base.filter(p => !scores.has(p.key));
+  const target = unseen.length ? unseen : base;
+  const p = weightedPick(target, target.map(x => {
+    const s = scores.get(x.key);
+    if (s === undefined) return 8;   // 未出題
+    return s ? 1 : 6;                // 間違えたものを重く
+  }));
+  state.recentHanrei = [p.key, ...state.recentHanrei.filter(k => k !== p.key)]
+    .slice(0, Math.max(1, pool.length - 1));
+  return p;
+}
+
+function presentHanrei() {
+  const p = drawHanrei();
+  state.hanrei = p;
+  state.drill = {mode:"hanrei", answer: p.it.ok ? "○" : "×", paragraphIndex:-1};
+  state.ref = null;
+  state.article = null;
+  setStatus("");
+
+  // 判例名は答えの手がかりになることがあるので、採点するまで伏せる
+  const html = `
+    <div class="artline">
+      <span class="artno">判例○×　${esc(p.h.field)}</span>
+      <span class="artcap">${esc(p.h.theme)}</span>
+    </div>
+    <div class="meta">
+      <span class="modetag">${esc(MODE_LABEL.hanrei)}</span>
+      <span>次の主張は、判例に照らして正しいですか</span>
+    </div>
+    <div class="facts">${esc(p.h.facts)}</div>
+    <div class="ask">${esc(p.it.claim)}</div>
+    <div class="answer">
+      <div class="seg" id="segMaru">
+        <button data-v="○" aria-pressed="false">○　正しい</button>
+        <button data-v="×" aria-pressed="false">×　誤り</button>
+      </div>
+      <button class="primary" id="grade" style="margin-top:16px">採点する</button>
+    </div>
+    <div id="result"></div>`;
+
+  const sheet = $("#sheet");
+  sheet.innerHTML = html;
+  sheet.hidden = false;
+  $("#cases").hidden = true;
+  state.maru = "";
+  bindSeg("#segMaru", v => { state.maru = v; });
+  $("#grade").addEventListener("click", gradeHanrei);
+  sheet.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function gradeHanrei() {
+  const {h, it, key} = state.hanrei;
+  if (!state.maru) { setStatus("○か×を選んでください。"); return; }
+  state.revealed = true;
+  const correct = (state.maru === "○") === it.ok;
+
+  const html = `
+    <div class="score"><span class="label" style="margin:0">判定</span>
+      <span class="n ${correct ? "hi" : "lo"}">${correct ? "正解" : "不正解"}</span></div>
+    <p class="topicline">${esc(h.caseName)}（${esc(h.cite)}）</p>
+    <p class="label">この主張は</p>
+    <div class="answerbox">${it.ok ? "○　判例に照らして正しい" : "×　判例に照らして誤り"}</div>
+    <p class="label" style="margin-top:12px">理由</p>
+    <div class="answerbox alt">${esc(it.why)}</div>
+    <div class="commentary">${bold(esc(h.commentary))}</div>`;
+
+  state.lastLog = buildHanreiLog(h, it, key, state.maru, correct);
+  appendLog(state.lastLog);
+  showResult(html);
+}
+
+function buildHanreiLog(h, it, key, chose, correct) {
+  return [
+    "────────────────",
+    `${new Date().toLocaleString("ja-JP")}　版 ${VERSION}`,
+    `[判例 ${key}] ${h.caseName}（${h.cite}）`,
+    `主張: ${it.claim}`,
+    `私の解答: ${chose}　／　正解: ${it.ok ? "○" : "×"}`,
+    `判定: ${correct ? "正解" : "不正解"}`,
+    `理由: ${it.why}`,
+    "コメント: ",
+    "",
+  ].join("\n");
 }
 
 /** 1条文を出題する。{ok, reason} を返す */

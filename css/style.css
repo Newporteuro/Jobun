@@ -81,6 +81,9 @@ header.masthead{
 }
 .seg button:last-child{border-right:0}
 .seg.five button{font-size:12px;padding:10px 2px;letter-spacing:-.01em}
+.seg.six button{font-size:11px;padding:10px 1px;letter-spacing:-.03em}
+/* ○×の二択は幅に余裕があるので、形式ボタンより大きく見せる */
+#segMaru button{font-size:15px;padding:14px 4px;font-family:var(--mincho)}
 .seg button[aria-pressed="true"]{background:var(--ai);color:var(--paper);font-weight:600}
 select,input[type=text]{
   font-family:var(--gothic);font-size:14px;color:var(--sumi);
