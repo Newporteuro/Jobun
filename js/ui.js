@@ -7,18 +7,18 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260825f";
+export const VERSION = "20260825g";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825f";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825g";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260825f";
+} from "./sources.js?v=20260825g";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260825f";
-import { CASES } from "./cases.js?v=20260825f";
+} from "./drill.js?v=20260825g";
+import { CASES } from "./cases.js?v=20260825g";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -26,7 +26,7 @@ const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c
 const state = {
   source: "range", mode: "blank", weight: "normal",
   scopeIndex: 0, fieldIndex: -1,
-  showHint: true, emphasizeEnding: true,
+  showHint: true, emphasizeEnding: true, guided: true,
   index: new Map(),      // lawId -> groups
   drill: null, article: null, ref: null, revealed: false,
   recent: [],            // 直近に出した条文（繰り返しを避ける）
@@ -67,6 +67,7 @@ function initControls() {
 
   bindSwitch("#optHint",   v => { state.showHint = v; });
   bindSwitch("#optEnding", v => { state.emphasizeEnding = v; });
+  bindSwitch("#optGuided", v => { state.guided = v; syncLogPanel(); });
 
   $("#scope").addEventListener("change", e => {
     state.scopeIndex = +e.target.value; state.fieldIndex = -1; syncFields();
@@ -122,6 +123,8 @@ function syncPanes() {
   $("#modeNote").textContent = MODE_NOTE[state.mode];
   $("#modeNote").className = "hint" + (state.mode === "doctrine" ? " warn" : "");
   $("#optHint").hidden   = isCase || state.mode === "recall";
+  $("#optGuided").hidden = !isCase;
+  $("#guidedNote").hidden = !isCase;
   $("#optEnding").hidden = state.mode !== "blank";
   $("#endingNote").hidden = state.mode !== "blank";
 }
@@ -229,21 +232,31 @@ async function draw() {
 
 /* ── 事例記述 ── */
 
+/** 出題に使う設問。本試験型（guided）を持たない問題は簡潔型のまま出る。
+    どちらで解いたかで得点が変わるので、記録にも残して苦手判定を分けている。 */
+const askOf = c => (state.guided && c.guided) ? c.guided : c.question;
+const askMode = () => state.guided ? "本試験型" : "簡潔型";
 /** 解答の記録から、事例問題ごとの直近の得点率を読む。
     記録は古い順に並んでいるので、後の記録で上書きされて最新のものが残る。
-    空欄のまま採点したものは実力を表さないので数えない。 */
+    空欄のまま採点したものは実力を表さないので数えない。
+
+    設問の誘導の有無で得点は変わるので、いま選んでいるモードの記録だけを見る。
+    混ぜると、本試験型で満点だった問題を「もう得意」と扱ってしまい、
+    簡潔型に戻した途端に解けない、ということが起きる。
+    モードの記載がない古い記録は、当時の設問がすべて簡潔型だったので簡潔型として読む。 */
 function caseScores() {
+  const want = askMode();
   const m = new Map();
   for (const text of readLog()) {
     const id  = (/\[([^\]]+)\]/.exec(text) || [])[1];
     const len = +((/私の解答\((\d+)字\)/.exec(text) || [])[1]);
     const sc  = /得点:\s*(\d+)\/(\d+)/.exec(text);
-    if (!id || !sc || !len || !+sc[2]) continue;
+    const mode = (/設問\(([^)]+)\)/.exec(text) || [])[1] || "簡潔型";
+    if (!id || !sc || !len || !+sc[2] || mode !== want) continue;
     m.set(id, +sc[1] / +sc[2]);
   }
   return m;
 }
-
 /* 苦手なものほど出やすくする。まだ解いていないものがいちばん重い。
    条文モードの重要度（MULTIPLIER）と同じ考え方。 */
 function caseWeight(pct) {
@@ -369,7 +382,7 @@ function renderSheet() {
         <span>事実関係を読んで設問に答えてください</span>
       </div>
       <div class="facts">${esc(c.facts)}</div>
-      <div class="ask">${esc(c.question)}</div>`;
+      <div class="ask">${esc(askOf(c))}</div>`;
     return finishSheet(html, 40);
   }
 
@@ -555,7 +568,7 @@ function buildLog(c, s, input) {
     "────────────────",
     `${stamp}　版 ${VERSION}`,
     `[${c.id}] ${c.topic}`,
-    `設問: ${c.question}`,
+    `設問(${askMode()}): ${askOf(c)}`,
     `私の解答(${[...input.replace(/\n/g, "")].length}字): ${input.trim()}`,
     `得点: ${s.earned}/${s.full}`,
     // 採点の当否をあとから検討できるよう、記録にも根拠を残す
