@@ -32,9 +32,9 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260825m";
-import { HANREI }    from "./js/hanrei.js?v=20260825m";
-import { scoreCase } from "./js/drill.js?v=20260825m";
+import { CASES }     from "./js/cases.js?v=20260825p";
+import { HANREI }    from "./js/hanrei.js?v=20260825p";
+import { scoreCase } from "./js/drill.js?v=20260825p";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -424,10 +424,31 @@ const PROBES = [
 
 /* ══════ G. 多肢選択のデータ整合 ══════ */
 {
+  /* 意味が同じ語を撹乱肢にすると、判旨の理解ではなく判決文の丸暗記を問うことになる。
+     文字列の包含では捕まらない組み合わせ（「非宗教的」と「世俗的」は共通する字が
+     「的」だけ）があるので、実際に踏んだものを台帳にしておく。
+     本試験の撹乱肢は「立法目的」に対する「立法目的達成手段」のように、
+     語形は近いが意味は違う。 */
+  const SYNONYMS = [
+    ["根本目的", "本来的目的"], ["根本目的", "究極目的"], ["根本目的", "制度趣旨"],
+    // 「非宗教的」と「世俗的」は台帳に入れない。世俗的は目的効果基準の語（津地鎮祭事件）で、
+    // 総合考慮による孔子廟事件とはどちらの枠組みの語彙かという違いがある
+    ["相当", "相応"], ["原則として", "原則的に"],
+    ["差別的取扱い", "別異の取扱い"], ["罷免", "解職"], ["例示的列記", "例示列挙"],
+    ["法廷意見", "多数意見"], ["賛同", "同調"],
+    // 「儒教」と「儒学」は台帳に入れない。宗教か学問かという区別そのものが論点で、
+    // 判決も「宗教としての儒教の信仰」と書いている。ここは意味の違いを問えている
+  ];
+  const isSyn = (a, b) => SYNONYMS.some(p => (p[0] === a && p[1] === b) || (p[0] === b && p[1] === a));
+  /* 「非宗教的」と「宗教的」は包含関係にあるが、意味は正反対で同義語ではない。
+     打ち消しの接頭辞が付いただけの組み合わせは、包含の判定から除く */
+  const isNeg = (a, b) => { const s = a.length < b.length ? a : b, l = a.length < b.length ? b : a;
+    return ["非", "不", "無", "未"].some(p => l === p + s); };
   const lines = [];
-  const withT = HANREI.filter(h => h.tashi);
-  for (const h of withT) {
-    const t = h.tashi, B = t.blanks || [];
+  const listOf = h => Array.isArray(h.tashi) ? h.tashi : h.tashi ? [h.tashi] : [];
+  const withT = HANREI.filter(h => listOf(h).length);
+  for (const h of withT) for (const t of listOf(h)) {
+    const B = t.blanks || [];
     const marks = [...t.passage.matchAll(/｛([^｝]+)｝/g)].map(m => m[1]);
     lines.push(`${mark(B.length >= 6)} ${h.id} 空欄の候補が6件以上（${B.length}件）`);
     // 候補が4件ちょうどだと毎回同じ4箇所になり、判旨の理解ではなく4語の暗記になる
@@ -448,8 +469,8 @@ const PROBES = [
     lines.push(`${mark(t.passage.replace(/[｛｝]/g, "").length >= 120)} ${h.id} 本文が120字以上（${t.passage.replace(/[｛｝]/g, "").length}字）`);
     // 同義語を撹乱肢にすると、判旨の理解ではなく丸暗記を問うことになる
     const near = B.filter(b => (b.decoys || []).some(d =>
-      (d.length >= 2 && b.word.length >= 2) &&
-      (d.includes(b.word) || b.word.includes(d))));
+      isSyn(b.word, d) ||
+      (!isNeg(b.word, d) && (d.length >= 2 && b.word.length >= 2) && (d.includes(b.word) || b.word.includes(d)))));
     lines.push(`${mark(!near.length)} ${h.id} 撹乱肢が正解を含む同義語になっていない`
       + (near.length ? `  <span class="ng">${esc(near.map(b => b.word).join("／"))}</span>` : ""));
     lines.push(`     <span class="dim">組合せ ${B.length}件から4件 = ${

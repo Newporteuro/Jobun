@@ -7,19 +7,19 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260825m";
+export const VERSION = "20260825p";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825m";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825p";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260825m";
+} from "./sources.js?v=20260825p";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260825m";
-import { CASES } from "./cases.js?v=20260825m";
-import { HANREI } from "./hanrei.js?v=20260825m";
+} from "./drill.js?v=20260825p";
+import { CASES } from "./cases.js?v=20260825p";
+import { HANREI } from "./hanrei.js?v=20260825p";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -458,7 +458,9 @@ const MARU = ["ア", "イ", "ウ", "エ"];
 const BLANK_RE = /｛([^｝]+)｝/g;
 
 /** tashi を持つ判例だけが多肢選択の対象になる */
-const tashiPool = () => HANREI.filter(h => h.tashi && h.tashi.blanks);
+/** tashi は1件でも配列でもよい。同じ判例の法廷意見と別意見を並べて持てるようにする */
+const tashiList = h => (Array.isArray(h.tashi) ? h.tashi : h.tashi ? [h.tashi] : []).filter(t => t && t.blanks);
+const tashiPool = () => HANREI.filter(h => tashiList(h).length);
 
 /** 記録から、空欄ごとの直近の正誤を読む。key は「判例id#語」 */
 function tashiScores() {
@@ -475,9 +477,9 @@ function tashiScores() {
 }
 
 /** 毎回ちがう4箇所を抜く。重要な語ほど、そして落とした語ほど選ばれやすい */
-function chooseBlanks(h) {
+function chooseBlanks(h, t) {
   const scores = tashiScores();
-  const cand = h.tashi.blanks.slice();
+  const cand = t.blanks.slice();
   const picked = [];
   while (picked.length < 4 && cand.length) {
     const w = cand.map(b => {
@@ -490,7 +492,7 @@ function chooseBlanks(h) {
     cand.splice(cand.indexOf(b), 1);
   }
   // 本文に現れる順に並べ替える。ア・イ・ウ・エが前から順に付くように
-  const order = [...h.tashi.passage.matchAll(BLANK_RE)].map(m => m[1]);
+  const order = [...t.passage.matchAll(BLANK_RE)].map(m => m[1]);
   picked.sort((x, y) => order.indexOf(x.word) - order.indexOf(y.word));
   return picked;
 }
@@ -505,10 +507,11 @@ function drawTashi() {
   const h = pick(fresh.length ? fresh : pool);
   state.recentTashi = [h.id, ...state.recentTashi.filter(x => x !== h.id)]
     .slice(0, Math.max(1, pool.length - 1));
-  const blanks = chooseBlanks(h);
+  const t = pick(tashiList(h));
+  const blanks = chooseBlanks(h, t);
   // 語群は、選んだ4つの正解＋それぞれの撹乱肢4語＝20語
   const choices = shuffle(blanks.flatMap(b => [b.word, ...b.decoys]));
-  return {h, blanks, choices};
+  return {h, t, blanks, choices};
 }
 
 function presentTashi() {
@@ -519,10 +522,10 @@ function presentTashi() {
   state.ref = null; state.article = null;
   setStatus("");
 
-  const {h, blanks, choices} = q;
+  const {h, t, blanks, choices} = q;
   // 選ばれた語は選択欄に、選ばれなかった候補は普通の本文に戻す
   let n = 0;
-  const body = esc(h.tashi.passage).replace(BLANK_RE, (_, word) => {
+  const body = esc(t.passage).replace(BLANK_RE, (_, word) => {
     const i = blanks.findIndex(b => b.word === word);
     if (i < 0) return esc(word);
     const m = MARU[i];
@@ -559,7 +562,7 @@ function presentTashi() {
 }
 
 function gradeTashi() {
-  const {h, blanks} = state.tashi;
+  const {h, t, blanks} = state.tashi;
   const chosen = {};
   for (const sel of document.querySelectorAll("#sheet select.fill")) chosen[sel.dataset.m] = sel.value;
   if (blanks.some((_, i) => !chosen[MARU[i]])) { setStatus("空欄をすべて選んでください。"); return; }
@@ -571,7 +574,7 @@ function gradeTashi() {
   const html = `
     <div class="score"><span class="label" style="margin:0">得点</span>
       <span class="n ${cls}">${earned}<span style="font-size:18px">/8点</span></span></div>
-    <p class="topicline">${esc(h.caseName)}（${esc(h.cite)}）　${esc(h.tashi.source)}</p>
+    <p class="topicline">${esc(h.caseName)}（${esc(h.cite)}）　${esc(t.source)}</p>
     <div class="points">` +
     blanks.map((b, i) => {
       const m = MARU[i], ok = chosen[m] === b.word;
@@ -587,16 +590,16 @@ function gradeTashi() {
     </div>
     <div class="commentary">${bold(esc(h.commentary))}</div>`;
 
-  state.lastLog = buildTashiLog(h, blanks, chosen, earned);
+  state.lastLog = buildTashiLog(h, t, blanks, chosen, earned);
   appendLog(state.lastLog);
   showResult(html);
 }
 
-function buildTashiLog(h, blanks, chosen, earned) {
+function buildTashiLog(h, t, blanks, chosen, earned) {
   return [
     "────────────────",
     `${new Date().toLocaleString("ja-JP")}　版 ${VERSION}`,
-    `[多肢 ${h.id}] ${h.caseName}（${h.cite}）${h.tashi.source}`,
+    `[多肢 ${h.id}] ${h.caseName}（${h.cite}）${t.source}`,
     `得点: ${earned}/8`,
     ...blanks.map((b, i) => {
       const m = MARU[i], ok = chosen[m] === b.word;
