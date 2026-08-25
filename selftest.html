@@ -32,9 +32,9 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260825h";
-import { HANREI }    from "./js/hanrei.js?v=20260825h";
-import { scoreCase } from "./js/drill.js?v=20260825h";
+import { CASES }     from "./js/cases.js?v=20260825i";
+import { HANREI }    from "./js/hanrei.js?v=20260825i";
+import { scoreCase } from "./js/drill.js?v=20260825i";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -408,6 +408,10 @@ const PROBES = [
       lines.push(`${mark(!/でしょうか|ですか|正しいか/.test(it.claim))} ${key} 主張に設問文が混ざっていない`);
       // 誤りの主張には、どこがどう違うのかが要る。「×」だけでは学習にならない
       lines.push(`${mark(it.ok || it.why.length >= 30)} ${key} 誤りの主張に理由がある（${it.why.length}字）`);
+      // 本試験の肢は平均101字（令和6年問6・令和7年問4の実測）。
+      // 平易に書くと判決文を読み解く負荷が抜け落ちるので、下限を80字に置く
+      lines.push(`${mark(it.claim.length >= 80)} ${key} 判決文型が80字以上（${it.claim.length}字）`);
+      lines.push(`${mark(!!it.plain && it.plain.length < it.claim.length)} ${key} 平易型が判決文型より短い（${it.plain ? it.plain.length : 0}字）`);
       lines.push(`${mark(!keys.has(key))} ${key} keyが一意`);
       keys.add(key);
     });

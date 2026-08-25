@@ -7,19 +7,19 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260825h";
+export const VERSION = "20260825i";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825h";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825i";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260825h";
+} from "./sources.js?v=20260825i";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260825h";
-import { CASES } from "./cases.js?v=20260825h";
-import { HANREI } from "./hanrei.js?v=20260825h";
+} from "./drill.js?v=20260825i";
+import { CASES } from "./cases.js?v=20260825i";
+import { HANREI } from "./hanrei.js?v=20260825i";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -37,6 +37,7 @@ const state = {
   hanrei: null,          // 出題中の判例○×（判例と主張の組）
   recentHanrei: [],      // 直近に出した主張のkey
   maru: "",              // ○×の選択
+  kobun: true,           // 判例○×を判決文型で出すか
 };
 
 const RECENT_LIMIT = 40;
@@ -73,6 +74,7 @@ function initControls() {
   bindSwitch("#optHint",   v => { state.showHint = v; });
   bindSwitch("#optEnding", v => { state.emphasizeEnding = v; });
   bindSwitch("#optGuided", v => { state.guided = v; syncLogPanel(); });
+  bindSwitch("#optKobun",  v => { state.kobun = v; });
 
   $("#scope").addEventListener("change", e => {
     state.scopeIndex = +e.target.value; state.fieldIndex = -1; syncFields();
@@ -129,6 +131,9 @@ function syncPanes() {
   $("#modeNote").textContent = MODE_NOTE[state.mode];
   $("#modeNote").className = "hint" + (state.mode === "doctrine" ? " warn" : "");
   $("#optHint").hidden   = isCase || state.mode === "recall";
+  const isHanrei = state.mode === "hanrei";
+  $("#optKobun").hidden  = !isHanrei;
+  $("#kobunNote").hidden = !isHanrei;
   $("#optGuided").hidden = !isKijutsu;
   $("#guidedNote").hidden = !isKijutsu;
   $("#optEnding").hidden = state.mode !== "blank";
@@ -314,6 +319,11 @@ async function presentCase() {
    事例記述のような正規表現の照合はいっさい要らない。
    ══════════════════════════════════════════════ */
 
+/** 出題に使う肢。判決文型を持たない主張は平易型のまま出る。
+    どちらで解いたかで正答率が変わるので、記録にもモードを残している。 */
+const claimOf = it => (state.kobun && it.claim) ? it.claim : (it.plain || it.claim);
+const claimMode = () => state.kobun ? "判決文型" : "平易型";
+
 /** 判例×主張の全組み合わせ。key は「判例id#主張の番号」 */
 function hanreiPool() {
   const out = [];
@@ -321,14 +331,17 @@ function hanreiPool() {
     h.items.forEach((it, i) => out.push({h, it, key: `${h.id}#${i}`}));
   return out;
 }
-
-/** 記録から、主張ごとの直近の正誤を読む。事例記述と同じく最新のものが残る */
+/** 記録から、主張ごとの直近の正誤を読む。事例記述と同じく最新のものが残る。
+    判決文型と平易型では正答率が変わるので、いま選んでいるモードの記録だけを見る。
+    モードの記載がない記録は、当時の肢がすべて平易型だったので平易型として読む。 */
 function hanreiScores() {
+  const want = claimMode();
   const m = new Map();
   for (const text of readLog()) {
-    const key = (/\[判例 ([^\]]+)\]/.exec(text) || [])[1];
-    const res = /判定:\s*(正解|不正解)/.exec(text);
-    if (!key || !res) continue;
+    const key  = (/\[判例 ([^\]]+)\]/.exec(text) || [])[1];
+    const res  = /判定:\s*(正解|不正解)/.exec(text);
+    const mode = (/主張\(([^)]+)\)/.exec(text) || [])[1] || "平易型";
+    if (!key || !res || mode !== want) continue;
     m.set(key, res[1] === "正解" ? 1 : 0);
   }
   return m;
@@ -371,7 +384,7 @@ function presentHanrei() {
       <span>次の主張は、判例に照らして正しいですか</span>
     </div>
     <div class="facts">${esc(p.h.facts)}</div>
-    <div class="ask">${esc(p.it.claim)}</div>
+    <div class="ask">${esc(claimOf(p.it))}</div>
     <div class="answer">
       <div class="seg" id="segMaru">
         <button data-v="○" aria-pressed="false">○　正しい</button>
@@ -417,7 +430,7 @@ function buildHanreiLog(h, it, key, chose, correct) {
     "────────────────",
     `${new Date().toLocaleString("ja-JP")}　版 ${VERSION}`,
     `[判例 ${key}] ${h.caseName}（${h.cite}）`,
-    `主張: ${it.claim}`,
+    `主張(${claimMode()}): ${claimOf(it)}`,
     `私の解答: ${chose}　／　正解: ${it.ok ? "○" : "×"}`,
     `判定: ${correct ? "正解" : "不正解"}`,
     `理由: ${it.why}`,
