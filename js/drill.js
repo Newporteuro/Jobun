@@ -5,7 +5,7 @@
    問題を組み立てる。採点の一致率もここ。
    通信もしないし、画面にも触らない ── 入力と出力だけの世界。
    ══════════════════════════════════════════════ */
-import { fullText } from "./sources.js?v=20260825d";   // ?v= は ui.js の VERSION と揃える
+import { fullText } from "./sources.js?v=20260825e";   // ?v= は ui.js の VERSION と揃える
 
 /* ══════════════════════════════════════════════
    条文の切り分けと、空欄にしてよい部分の判定
@@ -161,7 +161,14 @@ export const pick = arr => arr[Math.floor(Math.random() * arr.length)];
    採点：最長共通部分列にもとづく一致率
    ══════════════════════════════════════════════ */
 const DROP = new Set(["、","。","　"," ","\n","（","）","(",")"]);
-const normalize = s => [...s].filter(c => !DROP.has(c)).join("");
+
+/* 全角の英数字を半角に畳む。キーワードは半角で書いてあるので、
+   「１年以内」「Ｂに通知」と入力されると、そのままでは一つも当たらない。
+   日本語入力のままテンキーを打てば全角になるので、実際によく起きる。 */
+const WIDE = /[０-９Ａ-Ｚａ-ｚ]/g;
+const narrow = s => s.replace(WIDE, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+                     .replace(/／/g, "/");
+const normalize = s => narrow([...s].filter(c => !DROP.has(c)).join(""));
 
 export function similarity(a, b) {
   const x = [...normalize(a)], y = [...normalize(b)];
@@ -367,6 +374,11 @@ const KOTO_DEKIRU = /(こと|事)(が|の|は|も)?(でき|出来)/g;
 /* 「対抗し得ない」を「対抗できない」に揃える */
 const SHIURU = /(?:為し得|なし得|し得|しえ)/g;
 
+/* 「免れ得ない」「あり得る」の「得」を仮名に開く。「し得る」は SHIURU が先に
+   「でき」へ畳むので、ここに来るのは「免れ得ない」のような残りだけ。
+   直前がひらがなのときに限るので、「取得」「得点」は動かない。 */
+const ERU = /([ぁ-ん])得(?=[るれないずま])/g;
+
 /* 「六箇月」「6ヶ月」を「6月」に揃える。助数詞のかなを落としてから数字に直す。
    先読みを付けているのは、「一定」「一部」まで数字にしてしまわないため。 */
 const COUNTER_KANA = /(?:箇|ヶ|ケ|か|カ|个)(?=[月年日])/g;
@@ -385,6 +397,7 @@ function loosen(s) {
   let t = s;
   for (const [from, to] of OKURIGANA) t = t.split(from).join(to);
   t = t.replace(SHIURU, "でき");
+  t = t.replace(ERU, "$1え");
   t = t.replace(KOTO_DEKIRU, "でき");
   t = t.replace(COUNTER_KANA, "");
   t = t.replace(FRACTION, (_, a, b) => `${b}分の${a}`);
