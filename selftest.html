@@ -32,8 +32,8 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260825e";
-import { scoreCase } from "./js/drill.js?v=20260825e";
+import { CASES }     from "./js/cases.js?v=20260825f";
+import { scoreCase } from "./js/drill.js?v=20260825f";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -312,6 +312,11 @@ const PROBES = [
   // 指していることが読み取れなかったので、採点ではなく設問を直した
   ["gyote-39",    "命令等の案や関連資料を公示し、30日以上の期間を設け、意見を要約し公表する。", 15, 15],
   ["gyote-39",    "命令等の案と関連資料を公示し、30日以上の期間を設け、提出意見を十分に考慮する。", 20, 20],
+  // ── 解答テキストの指摘1件（2026-08-25）──
+  // 「同時に」と「理由を示す」の間に「書面のときは書面で」が割り込んでいた
+  ["gyote-14",    "不利益処分と同時に、書面のときは書面で、その理由を示さなければならない。", 20, 20],
+  ["gyote-14",    "処分と同時にする必要はなく、書面のときは書面で理由を示せばよい。", 0, 14],
+  ["gyote-14",    "不利益処分と同時に、その理由を示さなければならない。", 13, 13],
 ];
 {
   const lines = [];
