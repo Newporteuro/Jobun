@@ -32,9 +32,9 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260825t";
-import { HANREI }    from "./js/hanrei.js?v=20260825t";
-import { scoreCase } from "./js/drill.js?v=20260825t";
+import { CASES }     from "./js/cases.js?v=20260825v";
+import { HANREI }    from "./js/hanrei.js?v=20260825v";
+import { scoreCase } from "./js/drill.js?v=20260825v";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -435,7 +435,7 @@ const PROBES = [
     // 総合考慮による孔子廟事件とはどちらの枠組みの語彙かという違いがある
     ["相当", "相応"], ["原則として", "原則的に"],
     ["差別的取扱い", "別異の取扱い"], ["罷免", "解職"], ["例示的列記", "例示列挙"],
-    ["法廷意見", "多数意見"], ["賛同", "同調"], ["基準", "目的効果基準"],
+    ["法廷意見", "多数意見"], ["賛同", "同調"], ["基準", "目的効果基準"], ["原審判決", "原判決"],
     // 「儒教」と「儒学」は台帳に入れない。宗教か学問かという区別そのものが論点で、
     // 判決も「宗教としての儒教の信仰」と書いている。ここは意味の違いを問えている
   ];
@@ -452,23 +452,31 @@ const PROBES = [
     const marks = [...t.passage.matchAll(/｛([^｝]+)｝/g)].map(m => m[1]);
     lines.push(`${mark(B.length >= 6)} ${h.id} 空欄の候補が6件以上（${B.length}件）`);
     // 候補が4件ちょうどだと毎回同じ4箇所になり、判旨の理解ではなく4語の暗記になる
-    lines.push(`${mark(marks.length === B.length)} ${h.id} 本文の｛｝と blanks が一致（本文${marks.length}／定義${B.length}）`);
+    const uniq = [...new Set(marks)];
+    lines.push(`${mark(uniq.length === B.length)} ${h.id} 本文の｛｝と blanks が一致（本文${uniq.length}語・${marks.length}箇所／定義${B.length}）`);
     lines.push(`${mark(B.every(b => marks.includes(b.word)))} ${h.id} 定義した語がすべて本文にある`);
     const all = B.flatMap(b => [b.word, ...(b.decoys || [])]);
     lines.push(`${mark(new Set(all).size === all.length)} ${h.id} 正解と撹乱肢に重複がない（${all.length}語）`);
     lines.push(`${mark(B.every(b => (b.decoys || []).length === 4))} ${h.id} 各空欄に撹乱肢が4語ずつ`);
     // どの4つを選んでも語群がちょうど20語になること
     lines.push(`${mark(B.every(b => (b.decoys || []).length === 4))} ${h.id} どの組合せでも語群は20語`);
-    // 同じ語が本文に2回出ると、空欄にしても別の箇所に答えが見えてしまう
-    const twice = B.filter(b => t.passage.split(b.word).length - 1 > 1);
-    lines.push(`${mark(!twice.length)} ${h.id} 空欄の語が本文に1回しか出ない`
-      + (twice.length ? `  <span class="ng">${esc(twice.map(b => b.word).join("／"))}</span>` : ""));
+    /* 同じ語が複数箇所にあるのは本試験と同じ形なので構わない。
+       いけないのは、印を付けていない箇所が残ること。そこに答えが見えてしまう。 */
+    const bare = t.passage.replace(/｛[^｝]+｝/g, "");
+    const leak = B.filter(b => bare.includes(b.word));
+    lines.push(`${mark(!leak.length)} ${h.id} 空欄の語が地の文に残っていない`
+      + (leak.length ? `  <span class="ng">${esc(leak.map(b => b.word).join("／"))}</span>` : ""));
     lines.push(`${mark(B.every(b => b.why && b.why.length >= 30))} ${h.id} 空欄ごとの理由がある`);
     lines.push(`${mark(B.every(b => Number.isFinite(b.weight) && b.weight >= 1))} ${h.id} 重要度が付いている`);
     lines.push(`${mark(!!t.source)} ${h.id} 法廷意見か別意見かの別（${esc(t.source || "")}）`);
     lines.push(`${mark(t.passage.replace(/[｛｝]/g, "").length >= 120)} ${h.id} 本文が120字以上（${t.passage.replace(/[｛｝]/g, "").length}字）`);
     // 同義語を撹乱肢にすると、判旨の理解ではなく丸暗記を問うことになる
-    const near = B.filter(b => (b.decoys || []).some(d =>
+    /* 語群は4空欄で共有されるので、ある空欄のために作った撹乱肢が、別の空欄の正解の
+       同義語になってしまうことがある（「多数意見」の撹乱肢に置いた「原判決」が、
+       「原審判決」の空欄に流れ込んだ）。自分の撹乱肢だけでなく、
+       この判例のすべての撹乱肢と突き合わせる。 */
+    const allDecoys = B.flatMap(x => x.decoys || []);
+    const near = B.filter(b => allDecoys.filter(d => d !== b.word).some(d =>
       isSyn(b.word, d) ||
       (!isNeg(b.word, d) && (d.length >= 2 && b.word.length >= 2) && (d.includes(b.word) || b.word.includes(d)))));
     lines.push(`${mark(!near.length)} ${h.id} 撹乱肢が正解を含む同義語になっていない`

@@ -7,19 +7,19 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260825t";
+export const VERSION = "20260825v";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825t";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260825v";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260825t";
+} from "./sources.js?v=20260825v";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260825t";
-import { CASES } from "./cases.js?v=20260825t";
-import { HANREI } from "./hanrei.js?v=20260825t";
+} from "./drill.js?v=20260825v";
+import { CASES } from "./cases.js?v=20260825v";
+import { HANREI } from "./hanrei.js?v=20260825v";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -491,8 +491,8 @@ function chooseBlanks(h, t) {
     picked.push(b);
     cand.splice(cand.indexOf(b), 1);
   }
-  // 本文に現れる順に並べ替える。ア・イ・ウ・エが前から順に付くように
-  const order = [...t.passage.matchAll(BLANK_RE)].map(m => m[1]);
+  // 本文に最初に現れた順に並べ替える。ア・イ・ウ・エが前から順に付くように
+  const order = [...new Set([...t.passage.matchAll(BLANK_RE)].map(m => m[1]))];
   picked.sort((x, y) => order.indexOf(x.word) - order.indexOf(y.word));
   return picked;
 }
@@ -525,10 +525,17 @@ function presentTashi() {
   const {h, t, blanks, choices} = q;
   // 選ばれた語は選択欄に、選ばれなかった候補は普通の本文に戻す
   let n = 0;
+  /* 本試験の本文は、同じ語が入る空欄が複数箇所に現れる（令和7年問41は
+     ［イ］［ウ］［エ］がそれぞれ2箇所ずつで、位置は8箇所・答えは4語）。
+     2箇所に矛盾なく収まる語を探せるので、推測の足場になる。
+     選択欄は最初の1箇所だけに置き、2箇所目以降は記号だけを示す。 */
+  const placed = new Set();
   const body = esc(t.passage).replace(BLANK_RE, (_, word) => {
     const i = blanks.findIndex(b => b.word === word);
     if (i < 0) return esc(word);
     const m = MARU[i];
+    if (placed.has(m)) return `<span class="again">［${m}］</span>`;
+    placed.add(m);
     return `<select class="fill" data-m="${m}"><option value="">［${m}］</option>` +
       choices.map((w, k) => `<option value="${esc(w)}">${k + 1}　${esc(w)}</option>`).join("") +
       `</select>`;
