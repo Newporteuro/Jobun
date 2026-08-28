@@ -32,9 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260827f";
-import { HANREI }    from "./js/hanrei.js?v=20260827f";
-import { scoreCase } from "./js/drill.js?v=20260827f";
+import { CASES }     from "./js/cases.js?v=20260828a";
+import { HANREI }    from "./js/hanrei.js?v=20260828a";
+import { JOUBUN }    from "./js/joubun.js?v=20260828a";
+import { scoreCase } from "./js/drill.js?v=20260828a";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -622,6 +623,67 @@ const PROBES = [
   }
   if (!withT.length) lines.push(`${mark(true)} 多肢選択のデータはまだない`);
   section("G. 多肢選択のデータ整合", lines);
+}
+
+/* ══════════════════════════════════════════════
+   H. 条文穴埋めのデータ整合
+
+   多肢選択（G）と似ているが、撹乱肢の包含の検査はしない。
+   「内閣」と「内閣総理大臣」、「公布」と「公示」のように、
+   一方が他方の部分文字列になる対立こそが、この形式で問いたいものだから。
+   判例の多肢選択では同義語による丸暗記を防ぐために包含を弾いたが、
+   条文では逆に、包含する語を並べることに意味がある。
+   ══════════════════════════════════════════════ */
+{
+  const lines = [];
+  const ids = new Set();
+  for (const j of JOUBUN) {
+    const need = ["id","law","chapter","title","cite","passage","trap"];
+    const miss = need.filter(k => !j[k]);
+    lines.push(`${mark(!miss.length)} ${j.id || "(idなし)"} 必須項目`
+      + (miss.length ? `  <span class="ng">${esc(miss.join("／"))}</span>` : ""));
+    lines.push(`${mark(!ids.has(j.id))} ${j.id} idが一意`);
+    ids.add(j.id);
+
+    const B = j.blanks || [];
+    const marks = [...j.passage.matchAll(/｛([^｝]+)｝/g)].map(m => m[1]);
+    const uniq = [...new Set(marks)];
+    lines.push(`${mark(B.length >= 6)} ${j.id} 空欄の候補が6件以上（${B.length}件）`);
+    lines.push(`${mark(uniq.length === B.length)} ${j.id} 本文の｛｝と blanks が一致（本文${uniq.length}語・${marks.length}箇所／定義${B.length}）`);
+    lines.push(`${mark(B.every(b => marks.includes(b.word)))} ${j.id} 定義した語がすべて本文にある`);
+    /* 空欄をまたいだ重複は許す。「四十日」を「三十日」の撹乱肢にするのが狙いだから。
+       語群は出題時に重複を除くので、20語に満たないことがある。
+       禁じるのは、一つの空欄の中で正解が自分の撹乱肢に混じることと、撹乱肢どうしの重複 */
+    const selfDup = B.filter(b => (b.decoys || []).includes(b.word));
+    lines.push(`${mark(!selfDup.length)} ${j.id} 正解が自分の撹乱肢に入っていない`
+      + (selfDup.length ? `  <span class="ng">${esc(selfDup.map(b => b.word).join("／"))}</span>` : ""));
+    const decoyDup = B.filter(b => new Set(b.decoys || []).size !== (b.decoys || []).length);
+    lines.push(`${mark(!decoyDup.length)} ${j.id} 撹乱肢どうしが重複していない`
+      + (decoyDup.length ? `  <span class="ng">${esc(decoyDup.map(b => b.word).join("／"))}</span>` : ""));
+    /* どの4つを選んでも、語群が重複除去後に10語以上あること（選択肢が少なすぎると当てられる） */
+    const thin = B.length >= 4 && (() => {
+      let worst = 99;
+      for (let a = 0; a < B.length; a++) for (let b2 = a + 1; b2 < B.length; b2++)
+        for (let c = b2 + 1; c < B.length; c++) for (let d = c + 1; d < B.length; d++) {
+          const set = new Set([B[a], B[b2], B[c], B[d]].flatMap(x => [x.word, ...x.decoys]));
+          if (set.size < worst) worst = set.size;
+        }
+      return worst;
+    })();
+    lines.push(`${mark(thin >= 12)} ${j.id} どの4つを選んでも語群が12語以上（最少${thin}語）`);
+    lines.push(`${mark(B.every(b => (b.decoys || []).length === 4))} ${j.id} 各空欄に撹乱肢が4語ずつ`);
+    /* 印を付けていない箇所に答えが残っていないか。ここは多肢選択と同じ */
+    const bare = j.passage.replace(/｛[^｝]+｝/g, "");
+    const leak = B.filter(b => bare.includes(b.word));
+    lines.push(`${mark(!leak.length)} ${j.id} 空欄の語が地の文に残っていない`
+      + (leak.length ? `  <span class="ng">${esc(leak.map(b => b.word).join("／"))}</span>` : ""));
+    lines.push(`${mark(B.every(b => b.why && b.why.length >= 30))} ${j.id} 空欄ごとの理由が30字以上`);
+    lines.push(`${mark(B.every(b => Number.isFinite(b.weight) && b.weight >= 1))} ${j.id} 重要度が付いている`);
+    lines.push(`${mark(j.passage.replace(/[｛｝]/g, "").length >= 120)} ${j.id} 本文が120字以上（${j.passage.replace(/[｛｝]/g, "").length}字）`);
+    lines.push(`${mark(j.trap && j.trap.length >= 40)} ${j.id} trap が40字以上（${j.trap ? j.trap.length : 0}字）`);
+  }
+  lines.push(`<span class="dim">全 ${JOUBUN.length} 件・空欄 ${JOUBUN.reduce((n, j) => n + j.blanks.length, 0)} 個</span>`);
+  section("H. 条文穴埋めのデータ整合", lines);
 }
 
 /* ══════ まとめ ══════ */

@@ -7,19 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260827f";
+export const VERSION = "20260828a";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260827f";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260828a";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260827f";
+} from "./sources.js?v=20260828a";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260827f";
-import { CASES } from "./cases.js?v=20260827f";
-import { HANREI } from "./hanrei.js?v=20260827f";
+} from "./drill.js?v=20260828a";
+import { CASES } from "./cases.js?v=20260828a";
+import { HANREI } from "./hanrei.js?v=20260828a";
+import { JOUBUN } from "./joubun.js?v=20260828a";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -38,6 +39,8 @@ const state = {
   recentHanrei: [],      // 直近に出した主張のkey
   tashi: null,           // 出題中の多肢選択
   recentTashi: [],       // 直近に出した多肢選択のid
+  joubun: null,          // 出題中の条文穴埋め
+  recentJoubun: [],      // 直近に出した条文穴埋めのid
   maru: "",              // ○×の選択
   kobun: true,           // 判例○×を判決文型で出すか
 };
@@ -55,6 +58,7 @@ const MODE_NOTE = {
   case:        "本試験の記述式と同じ形式です。事例を読んで40字程度で答え、要素ごとの部分点で20点満点の採点をします。まだ解いていない問題と、前回の得点が低かった問題を重めに出します。",
   doctrine:    "Wikibooks の解説欄から判例法理を出題します。編集者による記述のため、条文と違い誤りを含む可能性があります。",
   tashi:       "本試験の問41にあたる形式です。判決文の4箇所を空欄にし、20語の語群から選びます。各2点の8点。",
+  joubun:      "条文の4箇所を語単位で空欄にし、語群から選びます。「穴埋め」が節を丸ごと空欄にするのに対し、こちらは数字・主体・使い分け（四分の一／三分の一、内閣／内閣総理大臣）を狙います。各2点の8点。",
   hanrei:      "憲法の判例について、一つの主張が判例に照らして正しいかを○×で答えます。本試験の5肢択一は独立した○×判断が5つ並んだものなので、その一つ分にあたります。",
   recall:      "条見出しだけを頼りに、条文全体を書き起こします。",
 };
@@ -63,6 +67,7 @@ const MODE_NOTE = {
 const MODE_LABEL = {
   blank: "穴埋め", descriptive: "条文40字", case: "事例記述",
   doctrine: "判例法理", recall: "全文再現", hanrei: "判例○×", tashi: "多肢選択",
+  joubun: "条文穴埋め",
 };
 
 /* ── 初期化 ── */
@@ -125,7 +130,7 @@ function bindSwitch(sel, fn) {
 
 function syncPanes() {
   // 事例記述は自前の問題バンクから出すので、出題元の選択は使わない
-  const isCase = ["case","hanrei","tashi"].includes(state.mode);
+  const isCase = ["case","hanrei","tashi","joubun"].includes(state.mode);
   const isKijutsu = state.mode === "case";
   $("#sourceLabel").hidden = isCase;
   $("#segSource").hidden  = isCase;
@@ -218,6 +223,7 @@ async function draw() {
     if (state.mode === "case")   { await presentCase(); return; }
     if (state.mode === "hanrei") { presentHanrei(); return; }
     if (state.mode === "tashi")  { presentTashi();  return; }
+    if (state.mode === "joubun") { presentJoubun(); return; }
     if (state.source === "number") {
       const id = $("#manualLaw").value;
       const law = Object.values(LAWS).find(l => l.id === id);
@@ -607,6 +613,151 @@ function buildTashiLog(h, t, blanks, chosen, earned) {
     "────────────────",
     `${new Date().toLocaleString("ja-JP")}　版 ${VERSION}`,
     `[多肢 ${h.id}] ${h.caseName}（${h.cite}）${t.source}`,
+    `得点: ${earned}/8`,
+    ...blanks.map((b, i) => {
+      const m = MARU[i], ok = chosen[m] === b.word;
+      return `  ${ok ? "○" : "×"} ${m} 正解「${b.word}」` + (ok ? "" : ` ／ 選んだのは「${chosen[m]}」`);
+    }),
+    "コメント: ",
+    "",
+  ].join("\n");
+}
+
+/* ══════════════════════════════════════════════
+   条文穴埋め（語単位）
+
+   多肢選択と同じ「4箇所を選び直して語群から選ばせる」形。
+   違うのは、語群に重複を許さず取り除くところ。
+   条文では「四十日」を「三十日」の撹乱肢に置くので、
+   別々の空欄の正解と撹乱肢が重なる。そのまま並べると
+   語群に同じ語が2度出てしまうため、出題時に一意にする。
+   ══════════════════════════════════════════════ */
+
+/** 記録から、空欄ごとの直近の正誤を読む。key は「条文id#語」 */
+function joubunScores() {
+  const m = new Map();
+  for (const text of readLog()) {
+    const id = (/\[条文 ([^\]]+)\]/.exec(text) || [])[1];
+    if (!id) continue;
+    for (const line of text.split("\n")) {
+      const r = /^\s*([○×])\s*[アイウエ]\s*正解「([^」]+)」/.exec(line);
+      if (r) m.set(`${id}#${r[2]}`, r[1] === "○" ? 1 : 0);
+    }
+  }
+  return m;
+}
+
+/** 重要な語ほど、そして落とした語ほど選ばれやすい。多肢選択と同じ考え方 */
+function chooseJoubunBlanks(j) {
+  const scores = joubunScores();
+  const cand = j.blanks.slice();
+  const picked = [];
+  while (picked.length < 4 && cand.length) {
+    const w = cand.map(b => {
+      const s = scores.get(`${j.id}#${b.word}`);
+      const miss = s === undefined ? 2 : s ? 1 : 4;   // 未出題2・正解1・誤答4
+      return (b.weight || 1) * miss;
+    });
+    const b = weightedPick(cand, w);
+    picked.push(b);
+    cand.splice(cand.indexOf(b), 1);
+  }
+  const order = [...new Set([...j.passage.matchAll(BLANK_RE)].map(m => m[1]))];
+  picked.sort((x, y) => order.indexOf(x.word) - order.indexOf(y.word));
+  return picked;
+}
+
+function drawJoubun() {
+  const fresh = JOUBUN.filter(j => !state.recentJoubun.includes(j.id));
+  const j = pick(fresh.length ? fresh : JOUBUN);
+  state.recentJoubun = [j.id, ...state.recentJoubun.filter(x => x !== j.id)]
+    .slice(0, Math.max(1, JOUBUN.length - 1));
+  const blanks = chooseJoubunBlanks(j);
+  // 語群は重複を取り除く。「四十日」が正解でも別の空欄の撹乱肢でもあるため
+  const choices = shuffle([...new Set(blanks.flatMap(b => [b.word, ...b.decoys]))]);
+  return {j, blanks, choices};
+}
+
+function presentJoubun() {
+  if (!JOUBUN.length) { setStatus("条文穴埋めの問題がまだありません。"); return; }
+  const q = drawJoubun();
+  state.joubun = q;
+  state.drill = {mode:"joubun", answer:"", paragraphIndex:-1};
+  state.ref = null; state.article = null;
+  setStatus("");
+
+  const {j, blanks, choices} = q;
+  const placed = new Set();
+  const body = esc(j.passage).replace(BLANK_RE, (_, word) => {
+    const i = blanks.findIndex(b => b.word === word);
+    if (i < 0) return esc(word);
+    const m = MARU[i];
+    if (placed.has(m)) return `<span class="again">［${m}］</span>`;
+    placed.add(m);
+    return `<select class="fill" data-m="${m}"><option value="">［${m}］</option>` +
+      choices.map((w, k) => `<option value="${esc(w)}">${k + 1}　${esc(w)}</option>`).join("") +
+      `</select>`;
+  }).replace(/／/g, "<br>");
+
+  const html = `
+    <div class="artline">
+      <span class="artno">${esc(j.law)}　${esc(j.cite)}</span>
+      <span class="artcap">4空欄・各2点・8点</span>
+    </div>
+    <div class="meta">
+      <span class="modetag">${esc(MODE_LABEL.joubun)}</span>
+      <span>${esc(j.chapter)}　${esc(j.title)}</span>
+    </div>
+    <div class="ask passage">${body}</div>
+    <div class="answer">
+      <p class="label">語群</p>
+      <div class="glossary">${choices.map((w, i) =>
+        `<span class="gw">${i + 1}　${esc(w)}</span>`).join("")}</div>
+      <button class="primary" id="grade" style="margin-top:16px">採点する</button>
+    </div>`;
+  showQuestion(html);
+  $("#grade").addEventListener("click", gradeJoubun);
+}
+
+function gradeJoubun() {
+  const {j, blanks} = state.joubun;
+  const chosen = {};
+  for (const sel of document.querySelectorAll("#sheet select.fill")) chosen[sel.dataset.m] = sel.value;
+  if (blanks.some((_, i) => !chosen[MARU[i]])) { setStatus("空欄をすべて選んでください。"); return; }
+  state.revealed = true;
+
+  const earned = blanks.filter((b, i) => chosen[MARU[i]] === b.word).length * 2;
+  const cls = earned >= 7 ? "hi" : earned >= 4 ? "mid" : "lo";
+
+  const html = `
+    <div class="score"><span class="label" style="margin:0">得点</span>
+      <span class="n ${cls}">${earned}<span style="font-size:18px">/8点</span></span></div>
+    <p class="topicline">${esc(j.law)}　${esc(j.cite)}　${esc(j.title)}</p>
+    <div class="points">` +
+    blanks.map((b, i) => {
+      const m = MARU[i], ok = chosen[m] === b.word;
+      return `
+      <div class="point ${ok ? "hit" : "miss"}">
+        <span class="mk">${ok ? "○" : "×"}</span>
+        <span class="lb">${m}　${esc(b.word)}${
+          ok ? "" : `<span class="eg">選んだのは「${esc(chosen[m])}」</span>`}
+          <span class="why">${esc(b.why)}</span></span>
+        <span class="pt">${ok ? "+2" : "0"} / 2</span>
+      </div>`;
+    }).join("") + `
+    </div>
+    <div class="commentary">${bold(esc(j.trap))}</div>`;
+
+  state.lastLog = buildJoubunLog(j, blanks, chosen, earned);
+  appendLog(state.lastLog);
+  showResult(html);
+}
+
+function buildJoubunLog(j, blanks, chosen, earned) {
+  return [
+    "────────────────",
+    `${new Date().toLocaleString("ja-JP")}　版 ${VERSION}`,
+    `[条文 ${j.id}] ${j.law} ${j.cite}　${j.title}`,
     `得点: ${earned}/8`,
     ...blanks.map((b, i) => {
       const m = MARU[i], ok = chosen[m] === b.word;
