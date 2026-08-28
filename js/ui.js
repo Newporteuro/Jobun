@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260828a";
+export const VERSION = "20260828b";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260828a";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260828b";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260828a";
+} from "./sources.js?v=20260828b";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260828a";
-import { CASES } from "./cases.js?v=20260828a";
-import { HANREI } from "./hanrei.js?v=20260828a";
-import { JOUBUN } from "./joubun.js?v=20260828a";
+} from "./drill.js?v=20260828b";
+import { CASES } from "./cases.js?v=20260828b";
+import { HANREI } from "./hanrei.js?v=20260828b";
+import { JOUBUN } from "./joubun.js?v=20260828b";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -714,9 +714,15 @@ function presentJoubun() {
       <div class="glossary">${choices.map((w, i) =>
         `<span class="gw">${i + 1}　${esc(w)}</span>`).join("")}</div>
       <button class="primary" id="grade" style="margin-top:16px">採点する</button>
-    </div>`;
-  showQuestion(html);
+    </div>
+    <div id="result"></div>`;
+
+  const sheet = $("#sheet");
+  sheet.innerHTML = html;
+  sheet.hidden = false;
+  $("#cases").hidden = true;
   $("#grade").addEventListener("click", gradeJoubun);
+  sheet.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
 function gradeJoubun() {
