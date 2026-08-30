@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260830d";
+export const VERSION = "20260830e";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260830d";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260830e";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260830d";
+} from "./sources.js?v=20260830e";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260830d";
-import { CASES } from "./cases.js?v=20260830d";
-import { HANREI } from "./hanrei.js?v=20260830d";
-import { JOUBUN } from "./joubun.js?v=20260830d";
+} from "./drill.js?v=20260830e";
+import { CASES } from "./cases.js?v=20260830e";
+import { HANREI } from "./hanrei.js?v=20260830e";
+import { JOUBUN } from "./joubun.js?v=20260830e";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -43,7 +43,64 @@ const state = {
   recentJoubun: [],      // 直近に出した条文穴埋めのid
   maru: "",              // ○×の選択
   kobun: true,           // 判例○×を判決文型で出すか
+  pickByMode: {},        // 形式ごとの出題範囲の絞り込み（"" ／ g:グループ ／ i:id）
 };
+
+/* ══════════════════════════════════════════════
+   出題範囲の絞り込み
+
+   判例○×・多肢選択・条文穴埋め・事例記述は自前の問題バンクから出すので、
+   「この判例だけ」「このテーマだけ」を繰り返せると復習が速い。
+   絞り込みは形式ごとに覚えておく（判例○×で政教分離を選んだまま
+   多肢選択に切り替えても、そちらはそちらの選択が残る）。
+
+   値は "" ／ "g:<グループ名>" ／ "i:<id>" の3種。
+   絞った結果が空になったときは全体に戻す。出題できない状態を作らないため。
+   ══════════════════════════════════════════════ */
+const PICK_MODES = ["hanrei", "tashi", "joubun", "case"];
+const PICK_GROUP_LABEL = {hanrei:"テーマ", tashi:"テーマ", joubun:"章", case:"分野"};
+
+const pickGroupOf = (mode, x) =>
+  mode === "joubun" ? x.chapter : mode === "case" ? x.field : x.theme;
+const pickLabelOf = (mode, x) =>
+  mode === "joubun" ? `${x.cite}　${x.title}`
+: mode === "case"   ? `${x.field}　${x.topic}`
+:                     `${x.caseName}（${x.cite}）`;
+
+function pickSource(mode) {
+  if (mode === "joubun") return JOUBUN;
+  if (mode === "case")   return CASES;
+  if (mode === "tashi")  return tashiAll();
+  return HANREI;
+}
+
+/** 選ばれている範囲だけに絞る。空になったら全体を返す */
+function applyPick(list, mode) {
+  const v = state.pickByMode[mode] || "";
+  if (!v) return list;
+  const sub = v.startsWith("i:")
+    ? list.filter(x => x.id === v.slice(2))
+    : list.filter(x => pickGroupOf(mode, x) === v.slice(2));
+  return sub.length ? sub : list;
+}
+
+function syncPick() {
+  const on = PICK_MODES.includes(state.mode);
+  $("#paneFilter").hidden = !on;
+  if (!on) return;
+  const mode = state.mode, src = pickSource(mode);
+  const groups = [...new Set(src.map(x => pickGroupOf(mode, x)))];
+  const out = [`<option value="">すべて（${src.length}件）</option>`,
+               `<optgroup label="${PICK_GROUP_LABEL[mode]}">`];
+  for (const g of groups)
+    out.push(`<option value="g:${esc(g)}">${esc(g)}（${src.filter(x => pickGroupOf(mode, x) === g).length}件）</option>`);
+  out.push(`</optgroup>`, `<optgroup label="個別">`);
+  for (const x of src) out.push(`<option value="i:${esc(x.id)}">${esc(pickLabelOf(mode, x))}</option>`);
+  out.push(`</optgroup>`);
+  const sel = $("#pick");
+  sel.innerHTML = out.join("");
+  sel.value = state.pickByMode[mode] || "";
+}
 
 const RECENT_LIMIT = 40;
 const refKey = ref => ref.law.id + "|" + ref.num;
@@ -88,6 +145,7 @@ function initControls() {
     state.scopeIndex = +e.target.value; state.fieldIndex = -1; syncFields();
   });
   $("#field").addEventListener("change", e => { state.fieldIndex = +e.target.value; });
+  $("#pick").addEventListener("change", e => { state.pickByMode[state.mode] = e.target.value; });
   $("#loadScope").addEventListener("click", loadScope);
   $("#draw").addEventListener("click", draw);
 
@@ -146,6 +204,7 @@ function syncPanes() {
   $("#guidedNote").hidden = !isKijutsu;
   $("#optEnding").hidden = state.mode !== "blank";
   $("#endingNote").hidden = state.mode !== "blank";
+  syncPick();
 }
 
 const currentScope = () => SCOPES[state.scopeIndex];
@@ -295,13 +354,14 @@ function caseWeight(pct) {
     全問を回りきれない。解答の記録は残るので、そちらを見て未着手を優先する。 */
 function drawCase() {
   const scores = caseScores();
-  const fresh = CASES.filter(c => !state.recentCases.includes(c.id));
-  const base = fresh.length ? fresh : CASES;
+  const src = applyPick(CASES, "case");
+  const fresh = src.filter(c => !state.recentCases.includes(c.id));
+  const base = fresh.length ? fresh : src;
   const unseen = base.filter(c => !scores.has(c.id));
   const pool = unseen.length ? unseen : base;
   const c = weightedPick(pool, pool.map(x => caseWeight(scores.get(x.id))));
   state.recentCases = [c.id, ...state.recentCases.filter(x => x !== c.id)]
-    .slice(0, Math.max(1, CASES.length - 1));
+    .slice(0, Math.max(1, src.length - 1));
   return c;
 }
 
@@ -337,7 +397,7 @@ const claimMode = () => state.kobun ? "判決文型" : "平易型";
 /** 判例×主張の全組み合わせ。key は「判例id#主張の番号」 */
 function hanreiPool() {
   const out = [];
-  for (const h of HANREI)
+  for (const h of applyPick(HANREI, "hanrei"))
     h.items.forEach((it, i) => out.push({h, it, key: `${h.id}#${i}`}));
   return out;
 }
@@ -466,7 +526,8 @@ const BLANK_RE = /｛([^｝]+)｝/g;
 /** tashi を持つ判例だけが多肢選択の対象になる */
 /** tashi は1件でも配列でもよい。同じ判例の法廷意見と別意見を並べて持てるようにする */
 const tashiList = h => (Array.isArray(h.tashi) ? h.tashi : h.tashi ? [h.tashi] : []).filter(t => t && t.blanks);
-const tashiPool = () => HANREI.filter(h => tashiList(h).length);
+const tashiAll  = () => HANREI.filter(h => tashiList(h).length);
+const tashiPool = () => applyPick(tashiAll(), "tashi");
 
 /** 記録から、空欄ごとの直近の正誤を読む。key は「判例id#語」 */
 function tashiScores() {
@@ -668,10 +729,11 @@ function chooseJoubunBlanks(j) {
 }
 
 function drawJoubun() {
-  const fresh = JOUBUN.filter(j => !state.recentJoubun.includes(j.id));
-  const j = pick(fresh.length ? fresh : JOUBUN);
+  const src = applyPick(JOUBUN, "joubun");
+  const fresh = src.filter(j => !state.recentJoubun.includes(j.id));
+  const j = pick(fresh.length ? fresh : src);
   state.recentJoubun = [j.id, ...state.recentJoubun.filter(x => x !== j.id)]
-    .slice(0, Math.max(1, JOUBUN.length - 1));
+    .slice(0, Math.max(1, src.length - 1));
   const blanks = chooseJoubunBlanks(j);
   // 語群は重複を取り除く。「四十日」が正解でも別の空欄の撹乱肢でもあるため
   const choices = shuffle([...new Set(blanks.flatMap(b => [b.word, ...b.decoys]))]);
