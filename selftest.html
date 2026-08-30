@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260830h";
-import { HANREI }    from "./js/hanrei.js?v=20260830h";
-import { JOUBUN }    from "./js/joubun.js?v=20260830h";
-import { scoreCase } from "./js/drill.js?v=20260830h";
+import { CASES }     from "./js/cases.js?v=20260830i";
+import { HANREI }    from "./js/hanrei.js?v=20260830i";
+import { JOUBUN }    from "./js/joubun.js?v=20260830i";
+import { scoreCase } from "./js/drill.js?v=20260830i";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -541,7 +541,8 @@ const PROBES = [
     lines.push(`${mark(!ids.has(h.id))} ${h.id} idが一意`);
     ids.add(h.id);
     // 出典は「最大判令2.11.25」の形。あとから原典に当たれるようにするため
-    lines.push(`${mark(/^最(大)?(判|決)(昭|平|令)\d+\.\d+\.\d+$/.test(h.cite))} ${h.id} 出典の書式 ${esc(h.cite)}`);
+    // 元年は「平元.2.17」と書くのが通例なので、年の位置に「元」を許す
+    lines.push(`${mark(/^最(大)?(判|決)(昭|平|令)(元|\d+)\.\d+\.\d+$/.test(h.cite))} ${h.id} 出典の書式 ${esc(h.cite)}`);
     lines.push(`${mark(Array.isArray(h.items) && h.items.length >= 2)} ${h.id} 主張が2件以上（${h.items ? h.items.length : 0}件）`);
     (h.items || []).forEach((it, i) => {
       items++; it.ok ? maru++ : batsu++;
