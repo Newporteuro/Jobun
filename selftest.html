@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260830b";
-import { HANREI }    from "./js/hanrei.js?v=20260830b";
-import { JOUBUN }    from "./js/joubun.js?v=20260830b";
-import { scoreCase } from "./js/drill.js?v=20260830b";
+import { CASES }     from "./js/cases.js?v=20260830c";
+import { HANREI }    from "./js/hanrei.js?v=20260830c";
+import { JOUBUN }    from "./js/joubun.js?v=20260830c";
+import { scoreCase } from "./js/drill.js?v=20260830c";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -413,6 +413,8 @@ const PROBES = [
   ["minpo-424",   "受益者Cを被告として詐害行為取消しの訴えを提起する権利はなく、甲土地の返還を求めることもできない。", 0, 16],
   ["minpo-424-2", "Cが登記を備えた以上、Bは詐害行為取消しを請求することはできず、損害賠償請求権も生じない。", 0, 4],
   ["minpo-424-2", "Bは、Cを被告として詐害行為取消しを求め、自己への所有権移転登記を請求することができる。", 0, 15],
+  // 相手方を書かない答案。設問が「誰に対し」と聞く形に直したので、この4点は落ちてよい
+  ["minpo-424-2", "損害賠償請求権を保全するため、詐害行為取消請求をでき、登記の抹消を請求できる。", 16, 16],
   ["minpo-536-2", "Bは代金の支払を拒むことができ、Aが免れた債務により得た利益を償還する義務はない。", 0, 4],
   ["minpo-563",   "相当の期間を定めて追完を催告しても、代金の減額を請求する権利はない。", 0, 7],
   ["minpo-637",   "注文者は履行の追完を請求する権利はなく、報酬の減額を求める権利もない。", 0, 0],
