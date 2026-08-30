@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260830f";
+export const VERSION = "20260830g";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260830f";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260830g";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260830f";
+} from "./sources.js?v=20260830g";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260830f";
-import { CASES } from "./cases.js?v=20260830f";
-import { HANREI } from "./hanrei.js?v=20260830f";
-import { JOUBUN } from "./joubun.js?v=20260830f";
+} from "./drill.js?v=20260830g";
+import { CASES } from "./cases.js?v=20260830g";
+import { HANREI } from "./hanrei.js?v=20260830g";
+import { JOUBUN } from "./joubun.js?v=20260830g";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -74,6 +74,17 @@ function pickSource(mode) {
   return HANREI;
 }
 
+/* グループを教材の目次の順に並べる。
+   判例のテーマは「人権4 幸福追求権と法の下の平等」「統治5 裁判所」のように
+   基本テキストの編と章に合わせてあるので、その番号で並べればそのまま目次になる。
+   条文穴埋めの章（第4章 国会）は憲法自身の章なので、章番号で並べる。 */
+function pickOrd(g) {
+  const m = /^(人権|統治)(\d+)/.exec(g);
+  if (m) return (m[1] === "人権" ? 0 : 1) * 100 + (+m[2]);
+  const c = /第(\d+)章/.exec(g);
+  return c ? +c[1] : 999;
+}
+
 /** 選ばれている範囲だけに絞る。空になったら全体を返す */
 function applyPick(list, mode) {
   const v = state.pickByMode[mode] || "";
@@ -89,7 +100,7 @@ function syncPick() {
   $("#paneFilter").hidden = !on;
   if (!on) return;
   const mode = state.mode, src = pickSource(mode);
-  const groups = [...new Set(src.map(x => pickGroupOf(mode, x)))];
+  const groups = [...new Set(src.map(x => pickGroupOf(mode, x)))].sort((a, b) => pickOrd(a) - pickOrd(b));
   const out = [`<option value="">すべて（${src.length}件）</option>`,
                `<optgroup label="${PICK_GROUP_LABEL[mode]}">`];
   for (const g of groups)

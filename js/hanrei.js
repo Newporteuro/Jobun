@@ -42,7 +42,7 @@ export const HANREI = [
 {
   id: "kenpou-r2-shusseki",
   field: "憲法",
-  theme: "司法",
+  theme: "統治5 裁判所",
   topic: "地方議会議員の出席停止と司法審査",
   caseName: "市議会議員出席停止事件",
   cite: "最大判令2.11.25",
@@ -104,7 +104,7 @@ export const HANREI = [
 {
   id: "kenpou-r3-koshibyo",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "政教分離と公有地の使用料免除",
   caseName: "孔子廟敷地無償貸与事件",
   cite: "最大判令3.2.24",
@@ -271,7 +271,7 @@ export const HANREI = [
 {
   id: "kenpou-r4-zaigai",
   field: "憲法",
-  theme: "参政権",
+  theme: "統治5 裁判所",
   topic: "在外国民の国民審査権と立法不作為",
   caseName: "在外邦人国民審査権確認等事件",
   cite: "最大判令4.5.25",
@@ -380,7 +380,7 @@ export const HANREI = [
 {
   id: "kenpou-r5-seidoitsu",
   field: "憲法",
-  theme: "新しい人権",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "性別変更の要件と身体への侵襲を受けない自由",
   caseName: "性同一性障害特例法違憲決定",
   cite: "最大決令5.10.25",
@@ -428,7 +428,7 @@ export const HANREI = [
 {
   id: "kenpou-r6-yusei",
   field: "憲法",
-  theme: "新しい人権",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "旧優生保護法の不妊手術規定と個人の尊厳",
   caseName: "旧優生保護法違憲事件",
   cite: "最大判令6.7.3",
@@ -535,7 +535,7 @@ export const HANREI = [
 {
   id: "kenpou-h20-jukinet",
   field: "憲法",
-  theme: "新しい人権",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "住基ネットと情報プライバシー（13条）",
   caseName: "住基ネット訴訟",
   cite: "最判平20.3.6",
@@ -697,7 +697,7 @@ export const HANREI = [
 {
   id: "kenpou-h29-kensaku",
   field: "憲法",
-  theme: "新しい人権",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "検索結果の削除とプライバシー",
   caseName: "検索結果削除請求事件",
   cite: "最決平29.1.31",
@@ -851,7 +851,7 @@ export const HANREI = [
 {
   id: "kenpou-s48-sonzoku",
   field: "憲法",
-  theme: "法の下の平等",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "尊属殺重罰規定と法の下の平等",
   caseName: "尊属殺重罰規定事件",
   cite: "最大判昭48.4.4",
@@ -959,7 +959,7 @@ export const HANREI = [
 {
   id: "kenpou-h27-fufu",
   field: "憲法",
-  theme: "法の下の平等",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "夫婦同氏制と人格権（13条・14条1項・24条）",
   caseName: "夫婦同氏制合憲判決",
   cite: "最大判平27.12.16",
@@ -1131,7 +1131,7 @@ export const HANREI = [
 {
   id: "kenpou-h27-saikon",
   field: "憲法",
-  theme: "法の下の平等",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "女子再婚禁止期間と平等（14条1項・24条2項）",
   caseName: "女子再婚禁止期間事件",
   cite: "最大判平27.12.16",
@@ -1306,7 +1306,7 @@ export const HANREI = [
 {
   id: "kenpou-s47-kouri",
   field: "憲法",
-  theme: "経済的自由",
+  theme: "人権6 経済的自由権",
   topic: "小売市場の許可規制と積極目的規制（22条1項）",
   caseName: "小売市場距離制限事件",
   cite: "最大判昭47.11.22",
@@ -1474,7 +1474,7 @@ export const HANREI = [
 {
   id: "kenpou-h25-iyakuhin",
   field: "憲法",
-  theme: "経済的自由",
+  theme: "人権6 経済的自由権",
   topic: "医薬品ネット販売と省令への委任（22条1項）",
   caseName: "医薬品ネット販売権確認等請求事件",
   cite: "最判平25.1.11",
@@ -1631,7 +1631,7 @@ export const HANREI = [
 {
   id: "kenpou-s51-asahikawa",
   field: "憲法",
-  theme: "社会権",
+  theme: "人権9 社会権",
   topic: "教育権の所在と教師の教授の自由（26条・23条）",
   caseName: "旭川学力テスト事件",
   cite: "最大判昭51.5.21",
@@ -1789,7 +1789,7 @@ export const HANREI = [
 {
   id: "kenpou-s58-yodogo",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "未決拘禁者の閲読の自由（21条）",
   caseName: "よど号ハイジャック記事抹消事件",
   cite: "最大判昭58.6.22",
@@ -1948,7 +1948,7 @@ export const HANREI = [
 {
   id: "kenpou-h9-tamagushi",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "玉串料の公金支出と政教分離",
   caseName: "愛媛玉串料訴訟",
   cite: "最大判平9.4.2",
@@ -2089,7 +2089,7 @@ export const HANREI = [
 {
   id: "kenpou-r3-fufu",
   field: "憲法",
-  theme: "法の下の平等",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "夫婦同氏制と憲法24条",
   caseName: "夫婦同氏制合憲決定",
   cite: "最大決令3.6.23",
@@ -2178,7 +2178,7 @@ export const HANREI = [
 {
   id: "kenpou-s45-yahata",
   field: "憲法",
-  theme: "人権総論",
+  theme: "人権1 人権の主体",
   topic: "法人の政治献金と人権享有主体性",
   caseName: "八幡製鉄政治献金事件",
   cite: "最大判昭45.6.24",
@@ -2381,7 +2381,7 @@ export const HANREI = [
 {
   id: "kenpou-s53-mclean",
   field: "憲法",
-  theme: "人権総論",
+  theme: "人権1 人権の主体",
   topic: "外国人の人権享有主体性と在留の自由",
   caseName: "マクリーン事件",
   cite: "最大判昭53.10.4",
@@ -2536,7 +2536,7 @@ export const HANREI = [
 {
   id: "kenpou-h22-sorachibuto",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "公有地の無償利用提供と政教分離",
   caseName: "空知太神社事件",
   cite: "最大判平22.1.20",
@@ -2747,7 +2747,7 @@ export const HANREI = [
 {
   id: "kenpou-h22-tomihira",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "神社敷地の町内会への譲与と政教分離",
   caseName: "富平神社事件",
   cite: "最大判平22.1.20",
@@ -2820,7 +2820,7 @@ export const HANREI = [
 {
   id: "kenpou-s49-saruhashi",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "公務員の政治的行為の禁止と表現の自由",
   caseName: "猿払事件",
   cite: "最大判昭49.11.6",
@@ -2988,7 +2988,7 @@ export const HANREI = [
 {
   id: "kenpou-h24-horikoshi",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "公務員の政治的行為と限定解釈",
   caseName: "堀越事件・世田谷事件",
   cite: "最判平24.12.7",
@@ -3206,7 +3206,7 @@ export const HANREI = [
 {
   id: "kenpou-s51-teisuu",
   field: "憲法",
-  theme: "参政権",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "議員定数不均衡と投票価値の平等",
   caseName: "衆議院議員定数不均衡事件",
   cite: "最大判昭51.4.14",
@@ -3451,7 +3451,7 @@ export const HANREI = [
 {
   id: "kenpou-s52-tsu",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "地鎮祭への公金支出と目的効果基準",
   caseName: "津地鎮祭事件",
   cite: "最大判昭52.7.13",
@@ -3678,7 +3678,7 @@ export const HANREI = [
 {
   id: "kenpou-s35-tomabechi",
   field: "憲法",
-  theme: "内閣",
+  theme: "統治5 裁判所",
   topic: "衆議院の解散と統治行為論",
   caseName: "苫米地事件",
   cite: "最大判昭35.6.8",
@@ -3830,7 +3830,7 @@ export const HANREI = [
 {
   id: "kenpou-s37-keisatsuhou",
   field: "憲法",
-  theme: "国会",
+  theme: "統治3 国会",
   topic: "法律制定の議事手続と司法審査",
   caseName: "警察法改正無効事件",
   cite: "最大判昭37.3.7",
@@ -3947,7 +3947,7 @@ export const HANREI = [
 {
   id: "kenpou-h9-menseki",
   field: "憲法",
-  theme: "国会",
+  theme: "統治3 国会",
   topic: "国会議員の発言と国家賠償責任",
   caseName: "病院長自殺事件",
   cite: "最判平9.9.9",
@@ -4110,7 +4110,7 @@ export const HANREI = [
 {
   id: "kenpou-s56-itamandara",
   field: "憲法",
-  theme: "司法",
+  theme: "統治5 裁判所",
   topic: "法律上の争訟と宗教上の教義に関する判断",
   caseName: "板まんだら事件",
   cite: "最判昭56.4.7",
@@ -4312,7 +4312,7 @@ export const HANREI = [
 {
   id: "kenpou-s52-toyama",
   field: "憲法",
-  theme: "司法",
+  theme: "統治5 裁判所",
   topic: "部分社会の法理と大学の内部行為",
   caseName: "富山大学事件",
   cite: "最判昭52.3.15",
@@ -4540,7 +4540,7 @@ export const HANREI = [
 {
   id: "kenpou-s34-sunagawa",
   field: "憲法",
-  theme: "平和主義",
+  theme: "統治5 裁判所",
   topic: "駐留米軍と条約の違憲審査",
   caseName: "砂川事件",
   cite: "最大判昭34.12.16",
@@ -4692,7 +4692,7 @@ export const HANREI = [
 {
   id: "kenpou-s50-yakkyoku",
   field: "憲法",
-  theme: "経済的自由",
+  theme: "人権6 経済的自由権",
   topic: "薬局の距離制限と消極目的規制（22条1項）",
   caseName: "薬局距離制限事件",
   cite: "最大判昭50.4.30",
@@ -4752,7 +4752,7 @@ export const HANREI = [
 {
   id: "kenpou-s59-zeikan",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "検閲の意義と税関検査（21条2項）",
   caseName: "税関検査事件",
   cite: "最大判昭59.12.12",
@@ -4810,7 +4810,7 @@ export const HANREI = [
 {
   id: "kenpou-s61-hoppou",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "出版の事前差止めと事前抑制（21条）",
   caseName: "北方ジャーナル事件",
   cite: "最大判昭61.6.11",
@@ -4867,7 +4867,7 @@ export const HANREI = [
 {
   id: "kenpou-s44-hakata",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "報道の自由と取材の自由（21条）",
   caseName: "博多駅テレビフィルム提出命令事件",
   cite: "最大決昭44.11.26",
@@ -4924,7 +4924,7 @@ export const HANREI = [
 {
   id: "kenpou-h7-izumisano",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "市民会館の使用不許可と集会の自由（21条）",
   caseName: "泉佐野市民会館事件",
   cite: "最判平7.3.7",
@@ -4973,7 +4973,7 @@ export const HANREI = [
 {
   id: "kenpou-h8-kendo",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "信仰上の理由による剣道実技の履修拒否（20条）",
   caseName: "エホバの証人剣道実技拒否事件",
   cite: "最判平8.3.8",
@@ -5033,7 +5033,7 @@ export const HANREI = [
 {
   id: "kenpou-s57-horiki",
   field: "憲法",
-  theme: "社会権",
+  theme: "人権9 社会権",
   topic: "併給禁止と生存権の立法裁量（25条）",
   caseName: "堀木訴訟",
   cite: "最大判昭57.7.7",
@@ -5089,7 +5089,7 @@ export const HANREI = [
 {
   id: "kenpou-h20-kokuseki",
   field: "憲法",
-  theme: "法の下の平等",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "国籍法の準正要件と法の下の平等（14条1項）",
   caseName: "生後認知児童国籍確認事件",
   cite: "最大判平20.6.4",
@@ -5150,7 +5150,7 @@ export const HANREI = [
 {
   id: "kenpou-h25-hichakushutsu",
   field: "憲法",
-  theme: "法の下の平等",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "非嫡出子の法定相続分と法の下の平等（14条1項）",
   caseName: "非嫡出子相続分規定違憲決定",
   cite: "最大決平25.9.4",
@@ -5199,7 +5199,7 @@ export const HANREI = [
 {
   id: "kenpou-h17-senkyoken",
   field: "憲法",
-  theme: "参政権",
+  theme: "人権8 受益権と参政権",
   topic: "在外国民の選挙権制限と立法不作為（15条・43条・44条）",
   caseName: "在外邦人選挙権制限違憲事件",
   cite: "最大判平17.9.14",
@@ -5259,7 +5259,7 @@ export const HANREI = [
 {
   id: "kenpou-s37-bosshu",
   field: "憲法",
-  theme: "人身の自由",
+  theme: "人権7 人身の自由",
   topic: "第三者所有物の没収と適正手続（31条・29条）",
   caseName: "第三者所有物没収事件",
   cite: "最大判昭37.11.28",
@@ -5307,7 +5307,7 @@ export const HANREI = [
 {
   id: "kenpou-h4-narita",
   field: "憲法",
-  theme: "人身の自由",
+  theme: "人権7 人身の自由",
   topic: "行政手続と適正手続の保障（31条）",
   caseName: "成田新法事件",
   cite: "最大判平4.7.1",
@@ -5365,7 +5365,7 @@ export const HANREI = [
 {
   id: "kenpou-s50-tokushima",
   field: "憲法",
-  theme: "地方自治",
+  theme: "人権7 人身の自由",
   topic: "刑罰法規の明確性と条例が国の法令に違反するかの判断（31条・94条）",
   caseName: "徳島市公安条例事件",
   cite: "最大判昭50.9.10",
@@ -5532,7 +5532,7 @@ export const HANREI = [
 {
   id: "kenpou-s42-asahi",
   field: "憲法",
-  theme: "社会権",
+  theme: "人権9 社会権",
   topic: "生存権の法的性格と保護基準の裁量（25条）",
   caseName: "朝日訴訟",
   cite: "最大判昭42.5.24",
@@ -5667,7 +5667,7 @@ export const HANREI = [
 {
   id: "kenpou-s48-mitsubishi",
   field: "憲法",
-  theme: "人権総論",
+  theme: "人権2 人権の限界",
   topic: "人権規定の私人間効力と企業の雇入れの自由（19条・14条）",
   caseName: "三菱樹脂事件",
   cite: "最大判昭48.12.12",
@@ -5786,7 +5786,7 @@ export const HANREI = [
 {
   id: "kenpou-s38-poporo",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "学問の自由と大学の自治（23条）",
   caseName: "東大ポポロ事件",
   cite: "最大判昭38.5.22",
@@ -5896,7 +5896,7 @@ export const HANREI = [
 {
   id: "kenpou-s48-zennorin",
   field: "憲法",
-  theme: "社会権",
+  theme: "人権9 社会権",
   topic: "公務員の労働基本権と争議行為の禁止（28条）",
   caseName: "全農林警職法事件",
   cite: "最大判昭48.4.25",
@@ -6022,7 +6022,7 @@ export const HANREI = [
 {
   id: "kenpou-s62-shinrinhou",
   field: "憲法",
-  theme: "経済的自由",
+  theme: "人権6 経済的自由権",
   topic: "共有林の分割請求の制限と財産権（29条2項）",
   caseName: "森林法共有林事件",
   cite: "最大判昭62.4.22",
@@ -6139,7 +6139,7 @@ export const HANREI = [
 {
   id: "kenpou-h11-shosenkyoku",
   field: "憲法",
-  theme: "参政権",
+  theme: "人権8 受益権と参政権",
   topic: "小選挙区制と選挙制度の立法裁量（43条・47条）",
   caseName: "小選挙区制合憲判決",
   cite: "最大判平11.11.10",
@@ -6250,7 +6250,7 @@ export const HANREI = [
 {
   id: "kenpou-h11-jufuku",
   field: "憲法",
-  theme: "参政権",
+  theme: "人権8 受益権と参政権",
   topic: "重複立候補制と復活当選（43条・44条）",
   caseName: "重複立候補制合憲判決",
   cite: "最大判平11.11.10",
@@ -6353,7 +6353,7 @@ export const HANREI = [
 {
   id: "kenpou-h16-hikousoku",
   field: "憲法",
-  theme: "参政権",
+  theme: "人権8 受益権と参政権",
   topic: "非拘束名簿式比例代表制と直接選挙（43条・15条）",
   caseName: "非拘束名簿式比例代表制合憲判決",
   cite: "最大判平16.1.14",
@@ -6462,7 +6462,7 @@ export const HANREI = [
 {
   id: "kenpou-h24-sangiin",
   field: "憲法",
-  theme: "参政権",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "参議院の選挙区と都道府県単位の仕組みの見直し（14条・43条）",
   caseName: "参議院議員定数不均衡訴訟",
   cite: "最大判平24.10.17",
@@ -6564,7 +6564,7 @@ export const HANREI = [
 {
   id: "kenpou-r2-tokuteiwaku",
   field: "憲法",
-  theme: "参政権",
+  theme: "人権8 受益権と参政権",
   topic: "参議院比例代表の特定枠制度と直接選挙（43条）",
   caseName: "特定枠制度合憲判決",
   cite: "最判令2.10.23",
@@ -6657,7 +6657,7 @@ export const HANREI = [
 {
   id: "kenpou-s37-jourei",
   field: "憲法",
-  theme: "地方自治",
+  theme: "人権7 人身の自由",
   topic: "条例への罰則の委任（31条・94条・73条6号）",
   caseName: "大阪市売春取締条例事件",
   cite: "最大判昭37.5.30",
@@ -6753,7 +6753,7 @@ export const HANREI = [
 {
   id: "kenpou-r4-hate",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "ヘイトスピーチ条例と表現の自由（21条1項）",
   caseName: "大阪市ヘイトスピーチ条例事件",
   cite: "最判令4.2.15",
@@ -6896,7 +6896,7 @@ export const HANREI = [
 {
   id: "kenpou-r5-kanazawa",
   field: "憲法",
-  theme: "精神的自由",
+  theme: "人権5 精神的自由権",
   topic: "市庁舎前広場の使用不許可と集会の自由（21条1項）",
   caseName: "金沢市庁舎前広場事件",
   cite: "最判令5.2.21",
@@ -7030,7 +7030,7 @@ export const HANREI = [
 {
   id: "kenpou-r5-mynumber",
   field: "憲法",
-  theme: "新しい人権",
+  theme: "人権4 幸福追求権と法の下の平等",
   topic: "マイナンバー制度とプライバシー（13条）",
   caseName: "マイナンバー訴訟",
   cite: "最判令5.3.9",
