@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>判例の決まり文句｜條文ドリル</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+/* このページだけの体裁。色と書体は css/style.css の変数をそのまま使う */
+.k-lede{font-size:13.5px;line-height:1.95;color:var(--sumi-soft);margin:14px 0 0}
+.k-prov{display:flex;flex-wrap:wrap;gap:2px 22px;margin:12px 0 0;padding:0;list-style:none;
+  font-size:11.5px;color:var(--sumi-soft);font-variant-numeric:tabular-nums}
+.k-prov b{color:var(--sumi);font-weight:600}
+
+.k-nav{display:flex;flex-wrap:wrap;gap:6px 8px;margin:22px 0 0}
+.k-nav a{font-size:12px;color:var(--ai);text-decoration:none;border:1px solid var(--hairline);
+  border-radius:2px;padding:5px 9px;background:var(--paper-raised);white-space:nowrap}
+.k-nav a:hover{border-color:var(--ai)}
+
+.k-sec{margin:38px 0 0}
+.k-sec h2{font-family:var(--mincho);font-size:18px;font-weight:600;letter-spacing:.12em;
+  margin:0 0 4px;padding-bottom:7px;border-bottom:1px solid var(--sumi)}
+.k-sec h2 .n{font-family:var(--gothic);font-size:11px;font-weight:400;letter-spacing:.06em;
+  color:var(--sumi-soft);margin-left:10px;letter-spacing:.02em}
+.k-note{font-size:12.5px;line-height:1.95;color:var(--sumi-soft);margin:11px 0 0}
+.k-warn{border:1px solid var(--hairline);border-left:3px solid var(--shu);
+  background:var(--paper-raised);padding:12px 14px;margin:14px 0 0}
+.k-warn p{margin:0;font-size:12.5px;line-height:1.95;color:var(--sumi-soft)}
+.k-warn p+p{margin-top:8px}
+.k-warn b{color:var(--sumi)}
+
+.k-list{margin:16px 0 0;display:flex;flex-direction:column;gap:10px}
+.kw{border:1px solid var(--hairline);border-left:3px solid var(--hairline);
+  background:var(--paper-raised);padding:13px 15px}
+.kw.up{border-left-color:var(--wakaba)}
+.kw.down{border-left-color:var(--shu)}
+.kw.how{border-left-color:var(--ai)}
+.kw-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px}
+.kw .term{font-family:var(--mincho);font-size:16px;font-weight:600;line-height:1.6;margin:0;flex:1 1 auto}
+.kw .tag{font-size:10px;letter-spacing:.12em;padding:2px 7px;border-radius:2px;white-space:nowrap;
+  color:var(--paper);background:var(--sumi-soft)}
+.kw.up .tag{background:var(--wakaba)}
+.kw.down .tag{background:var(--shu)}
+.kw.how .tag{background:var(--ai)}
+.kw .cnt{font-size:11px;color:var(--sumi-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kw .say{font-size:13px;line-height:1.95;margin:8px 0 0}
+.kw .say .sub{color:var(--sumi-soft)}
+.kw .quote{font-family:var(--mincho);font-size:13.5px;line-height:1.95;color:var(--sumi);
+  border-left:2px solid var(--hairline);padding:0 0 0 12px;margin:9px 0 0}
+.kw .quote cite{display:block;font-style:normal;font-size:11px;color:var(--sumi-soft);margin:4px 0 0}
+
+.k-tablewrap{overflow-x:auto;margin:16px 0 0}
+.k-tablewrap table{border-collapse:collapse;width:100%;min-width:560px;font-size:12.5px}
+.k-tablewrap th,.k-tablewrap td{text-align:left;vertical-align:top;padding:10px 12px;
+  border-bottom:1px solid var(--hairline);line-height:1.85}
+.k-tablewrap thead th{font-size:10.5px;letter-spacing:.16em;color:var(--sumi-soft);
+  font-weight:400;border-bottom:1px solid var(--sumi)}
+.k-tablewrap td.kk{font-family:var(--mincho);font-size:14px;white-space:nowrap}
+.k-tablewrap td.kk small{display:block;font-family:var(--gothic);font-size:10.5px;
+  color:var(--sumi-soft);font-variant-numeric:tabular-nums}
+.k-back{display:inline-block;margin:30px 0 0;font-size:13px;color:var(--ai);text-decoration:none}
+.k-back:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <h1>判例の決まり文句</h1>
+    <span class="stamp">憲法・行政法</span>
+  </header>
+
+  <p class="k-lede">判決文には、意味と使う場面が固定された語がある。その語が出た時点で結論はほぼ決まる。最高裁判決の本文をつないで、語ごとに「どちらへ転ぶか」を数えた台帳。</p>
+  <ul class="k-prov">
+    <li>本文 <b>126ファイル・99判例</b></li>
+    <li>正味 <b>1,566,446字</b></li>
+    <li>引用14本はすべて判決文の原文</li>
+  </ul>
+
+  <nav class="k-nav">
+    <a href="#switch">結論スイッチ</a>
+    <a href="#shobun">処分性</a>
+    <a href="#genkoku">原告適格</a>
+    <a href="#riki">訴えの利益</a>
+    <a href="#sairyo">行政裁量</a>
+    <a href="#tetsuzuki">行政手続</a>
+    <a href="#kokubai">国家賠償</a>
+    <a href="#hosho">損失補償</a>
+    <a href="#monosashi">審査の物差し</a>
+    <a href="#seikyo">政教分離と司法権</a>
+    <a href="#mazaru">混ざる語</a>
+    <a href="#arika">判旨の在りか</a>
+  </nav>
+
+  <!-- ── 結論スイッチ ───────────────── -->
+  <section class="k-sec" id="switch">
+    <h2>結論スイッチ<span class="n">この3語を先に探せば結論が分かる</span></h2>
+    <p class="k-note">判旨の中でいちばん安く作れる誤り肢がここ。「にすぎない」と「にとどまらず」を入れ替えるだけで、結論が裏返った肢ができあがる。</p>
+
+    <div class="k-warn">
+      <p><b>この3語が教えるのは「向き」であって「位置」ではない。</b>「にすぎない」を含む168文を分類すると、判旨の型はわずか20%で、当事者の主張が13%、残る66%は意見・反対意見や事実認定の中にある。<b>相手方も使う語</b>だということ ──「所論は、特定の者を誹謗する<b>にすぎない</b>本件発言は…」（免責特権）は上告人の主張で、最高裁はこれを退けている。</p>
+      <p>位置を教えるのは<b>「と解するのが相当である」</b>のほう（149文中141文＝94%が判旨の型）。<b>先に位置を決めて、その中で向きを読む。</b>逆にすると判例の立場を正反対に取る。なお「にとどまらず」だけは当事者の主張に出るのが44文中1文（2%）で、例外的に安全 ── 何かを格上げする語は、判断する側にしか使えないため。</p>
+    </div>
+
+    <div class="k-list">
+      <div class="kw down">
+        <div class="kw-head"><p class="term">〜にすぎない</p><span class="tag">格下げ</span><span class="cnt">58判例 175回</span></div>
+        <p class="say">直後は「だから認めない」。処分性・原告適格・訴えの利益・人権制約、どの場面でも向きは同じ。</p>
+        <p class="quote">青写真たる性質を有するにすぎない<cite>土地区画整理事業計画（青写真判決）── 処分性なし</cite></p>
+      </div>
+      <div class="kw up">
+        <div class="kw-head"><p class="term">〜にとどまらず</p><span class="tag">格上げ</span><span class="cnt">24判例 48回</span></div>
+        <p class="say">直後は「だから認める」。<span class="sub">一般的公益 → 個別的利益、事実上の利益 → 法的利益へ引き上げる合図。</span></p>
+        <p class="quote">単に公衆の生命、身体の安全、環境上の利益を一般的公益として保護しようとするにとどまらず<cite>もんじゅ ── 個々人の個別的利益として保護＝原告適格あり</cite></p>
+        <p class="quote">単なる事実上の反射的利益というにとどまらず<cite>公衆浴場業距離制限 ── 法的利益＝原告適格あり</cite></p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">〜にとどまる</p><span class="tag">格下げ</span><span class="cnt">37判例 96回</span></div>
+        <p class="say">「とどまらず」と一字違いで逆。<span class="sub">ただし否定形に注意 ──「とどまるとはいえない」は格上げに戻る。</span></p>
+        <p class="quote">その効果が間接的、付随的なものにとどまるとはいえない<cite>孔子廟 ── 政教分離違反を認めた</cite></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 処分性 ─────────────────────── -->
+  <section class="k-sec" id="shobun">
+    <h2>処分性<span class="n">行訴法3条2項</span></h2>
+    <p class="k-note">定義は大田区ごみ焼却場が置き、青写真判決が「一般的・抽象的だから処分でない」と切り、浜松市が同じ事業計画について結論を変えた。青写真の語を残したまま結論だけ裏返している点が狙われる。</p>
+    <div class="k-list">
+      <div class="kw how">
+        <div class="kw-head"><p class="term">公権力の主体たる国または公共団体が行う行為のうち、直接国民の権利義務を形成しまたはその範囲を確定することが法律上認められているもの</p><span class="tag">定義</span><span class="cnt">ごみ焼却場</span></div>
+        <p class="say">処分性の定義そのもの。以後の判例はすべてこの型に当てはめる形で書かれる。</p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">一般的、抽象的</p><span class="tag">格下げ</span><span class="cnt">9判例 14回</span></div>
+        <p class="say">処分性の場面では「だから処分でない」。<span class="sub">向きが逆になる場面があるので後掲の「混ざる語」を見ること。</span></p>
+        <p class="quote">不特定多数の者に対して一般的抽象的な基準を定立するものにすぎない<cite>二項道路一括指定事件 ── 原審の理由づけ。最高裁はこれを覆した</cite></p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">特定個人に向けられた具体的な処分とは著しく趣きを異にし</p><span class="tag">格下げ</span><span class="cnt">青写真判決</span></div>
+        <p class="say">名宛人が特定されていないことを処分性否定に使う言い回し。</p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">事件の成熟性を欠く</p><span class="tag">格下げ</span><span class="cnt">青写真判決</span></div>
+        <p class="say">まだ争わせる段階ではない、という切り方。具体的な処分が出た段階で争えば足りるとする。</p>
+      </div>
+      <div class="kw up">
+        <div class="kw-head"><p class="term">その法的地位に直接的な影響が生ずる</p><span class="tag">格上げ</span><span class="cnt">浜松市 4回</span></div>
+        <p class="say">青写真判決を変更した決め手。<span class="sub">同じ判決の中で「一般的、抽象的なものにすぎないということはできない」と、青写真の語を打ち消している。</span></p>
+      </div>
+      <div class="kw up">
+        <div class="kw-head"><p class="term">実効的な権利救済を図るためには</p><span class="tag">格上げ</span><span class="cnt">浜松市 4回</span></div>
+        <p class="say">早い段階での出訴を認める理由づけ。この語が出たら処分性は認められる。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 原告適格 ───────────────────── -->
+  <section class="k-sec" id="genkoku">
+    <h2>原告適格<span class="n">行訴法9条</span></h2>
+    <p class="k-note">「法律上保護された利益」か「反射的利益」かの二択。主婦連が両者を定義で切り分け、公衆浴場・もんじゅ・場外車券が個別に引き上げていく。</p>
+    <div class="k-list">
+      <div class="kw down">
+        <div class="kw-head"><p class="term">たまたま一定の者が受けることとなる反射的利益</p><span class="tag">格下げ</span><span class="cnt">主婦連ジュース事件</span></div>
+        <p class="say">公益実現のために課した制約の結果、偶然その人に及んだだけの利益。<span class="sub">「たまたま」は狙って与えたものではない、という否定の合図。</span></p>
+        <p class="quote">公益の実現を目的として行政権の行使に制約を課している結果たまたま一定の者が受けることとなる反射的利益とは区別されるべきもの<cite>主婦連ジュース事件</cite></p>
+      </div>
+      <div class="kw up">
+        <div class="kw-head"><p class="term">個々人の個別的利益としても保護すべき</p><span class="tag">格上げ</span><span class="cnt">5判例 16回</span></div>
+        <p class="say">一般的公益に吸収させず切り出す、という認定。原告適格を認める側の決まり文句。</p>
+      </div>
+      <div class="kw up">
+        <div class="kw-head"><p class="term">一般的公益の中に吸収解消させることが困難</p><span class="tag">格上げ</span><span class="cnt">5判例 8回</span></div>
+        <p class="say">上と同じ働きを、否定の形で書いたもの。<span class="sub">場外車券は周辺住民の健康被害についてこれを認めた。</span></p>
+      </div>
+      <div class="kw up">
+        <div class="kw-head"><p class="term">直接的かつ重大な被害を受けることが想定される範囲の住民</p><span class="tag">格上げ</span><span class="cnt">もんじゅ 8回</span></div>
+        <p class="say">距離ではなく被害の性質で原告の範囲を画する。<span class="sub">「著しい被害」（小田急・場外車券）も同じ役割。</span></p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">不特定多数者の具体的利益</p><span class="tag">分岐点</span><span class="cnt">5判例 17回</span></div>
+        <p class="say">これを個々人の個別的利益としても保護する趣旨を含むか否か、が判断の分かれ目。<span class="sub">保安林指定解除は「一般的公益としてとらえた」として否定側に使っている。</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 訴えの利益 ─────────────────── -->
+  <section class="k-sec" id="riki">
+    <h2>訴えの利益<span class="n">行訴法9条括弧書</span></h2>
+    <div class="k-list">
+      <div class="kw down">
+        <div class="kw-head"><p class="term">名誉、感情、信用等を損なう</p><span class="tag">格下げ</span><span class="cnt">運転免許停止処分</span></div>
+        <p class="say">原審がこれを訴えの利益の根拠にしたのを最高裁が退けた。<span class="sub">原審の語をそのまま肢にすると最良の撹乱肢になる。</span></p>
+        <p class="quote">それは本件原処分がもたらす事実上の効果にすぎないものであり<cite>運転免許停止処分 ── 訴えの利益なし</cite></p>
+      </div>
+      <div class="kw up">
+        <div class="kw-head"><p class="term">加重</p><span class="tag">格上げ</span><span class="cnt">6判例 51回</span></div>
+        <p class="say">処分基準に前歴による加重の定めがあれば、期間経過後も取消しを求める利益が残る。<span class="sub">同じ語が投票価値（小選挙区）でも使われるので場面で切る。</span></p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">期間の経過</p><span class="tag">前提</span><span class="cnt">8判例 66回</span></div>
+        <p class="say">処分の効果が消えたあと何が残るかを問う合図。残れば適法、残らなければ却下。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 行政裁量 ───────────────────── -->
+  <section class="k-sec" id="sairyo">
+    <h2>行政裁量</h2>
+    <div class="k-list">
+      <div class="kw how">
+        <div class="kw-head"><p class="term">社会観念上著しく妥当を欠き、裁量権を濫用したと認められる場合に限り違法</p><span class="tag">審査の枠</span><span class="cnt">2判例 9回</span></div>
+        <p class="say">裁量処分の審査方法。<span class="sub">裁判所は懲戒権者と同一の立場に立って処分の当否を判断するのではない、という限定とセットで書かれる。</span></p>
+        <p class="quote">懲戒免職処分をもつて臨むのは、社会観念上著しく妥当を欠くと認められるから、本件処分は裁量の範囲を超えたものとして違法<cite>神戸税関事件</cite></p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">事柄の性質上、〜の裁量に任せるのでなければ</p><span class="tag">裁量を認める</span><span class="cnt">8判例 24回</span></div>
+        <p class="say">広い裁量を認める理由づけの定型。マクリーンは法務大臣の在留期間更新について使った。</p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">行政権の濫用に相当する違法性を帯びている</p><span class="tag">違法を認める</span><span class="cnt">個室付浴場事件</span></div>
+        <p class="say">児童遊園の設置認可が営業阻止のために行われた場合、その存在を規制の根拠にすることは許されない。<span class="sub">動機の違法を処分の違法に結びつける言い回し。</span></p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">看過し難い過誤、欠落</p><span class="tag">違法を認める</span><span class="cnt">伊方原発訴訟</span></div>
+        <p class="say">判断過程に着目する審査。<span class="sub">「現在の科学技術水準に照らし」とセットで、基準時を処分時ではなく現在に置く点が問われる。</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 行政手続 ───────────────────── -->
+  <section class="k-sec" id="tetsuzuki">
+    <h2>行政手続</h2>
+    <p class="k-note">憲法31条・35条・38条が行政手続に及ぶか、及ぶとして何を要求するか。川崎民商と成田新法が枠を置き、旅券と一級建築士が理由の提示を具体化する。</p>
+    <div class="k-list">
+      <div class="kw how">
+        <div class="kw-head"><p class="term">刑事責任追及を目的とするものでないとの理由のみで</p><span class="tag">枠外にはしない</span><span class="cnt">川崎民商</span></div>
+        <p class="say">憲法35条・38条は行政手続にも及びうる。<span class="sub">そのうえで、旧所得税法の質問検査は令状を一般的要件としなくても35条に反しない、と結論では合憲にした。</span></p>
+        <p class="quote">当該手続が刑事責任追及を目的とするものでないとの理由のみで、その手続における一切の強制が当然に右規定による保障の枠外にあると判断することは相当ではない<cite>川崎民商（最大判昭47.11.22）</cite></p>
+        <p class="say"><b>ここが出題の急所。</b><span class="sub">原審は「35条・38条は刑事手続に関する規定であって直ちに行政手続に適用されない」としたが、最高裁は「右各条項についての解釈を誤つたものというほかはない」と明示して退けている。結論が同じ（合憲）なので、原審の理由づけをそのまま肢にすると誤りになる。</span></p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">事前の告知、弁解、防禦の機会</p><span class="tag">総合較量</span><span class="cnt">3判例 4回</span></div>
+        <p class="say">31条の保障が及ぶ場合でも<span class="sub">「常に必ず」与える必要はない。</span>制限を受ける権利利益の内容・性質・程度と、達成しようとする公益の内容・程度・緊急性を総合較量して決める。<b>「行政手続には31条は及ばない」も「必ず事前手続が要る」も、どちらも誤り。</b></p>
+        <p class="quote">行政手続は、刑事手続とその性質においておのずから差異があり、また、行政目的に応じて多種多様であるから<cite>成田新法事件</cite></p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">理由の提示・付記</p><span class="tag">欠けば違法</span><span class="cnt">2判例 114回</span></div>
+        <p class="say">どの程度書くべきかは<span class="sub">「処分の性質と理由付記を命じた各法律の規定の趣旨・目的に照らして」</span>決める（旅券）。一級建築士は、原因事実と根拠法条だけで<b>処分基準の適用関係</b>が示されていないことをもって、行政手続法14条1項の要件を欠くとした。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 国家賠償 ───────────────────── -->
+  <section class="k-sec" id="kokubai">
+    <h2>国家賠償<span class="n">1条・2条</span></h2>
+    <div class="k-list">
+      <div class="kw up">
+        <div class="kw-head"><p class="term">行為の外形において職務執行と認め得べきもの</p><span class="tag">責任を認める</span><span class="cnt">警察官拳銃事件</span></div>
+        <p class="say">外形標準説。<span class="sub">公務員が専ら自己の利益をはかる目的であっても、外形が職務行為なら国が責任を負う。「意図目的はともあれ」が本文の言い回し。</span></p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">営造物が通常有すべき安全性を欠き、他人に危害を及ぼす危険性のある状態</p><span class="tag">定義</span><span class="cnt">4判例 5回</span></div>
+        <p class="say">2条の設置管理の瑕疵の定義。<span class="sub">故意過失を問わない無過失責任である点が1条との分かれ目。</span></p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">過渡的な安全性をもって足りる</p><span class="tag">責任を否定</span><span class="cnt">大東水害 → 多摩川が引用</span></div>
+        <p class="say">河川管理には財政的・技術的・社会的制約があるとして基準を下げる。<span class="sub">多摩川はこれを引きつつ、改修済み河川については計画に対応する安全性を求めて結論を分けた。同じ語で逆の結論に届く型。</span></p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">その不行使が許容される限度を逸脱して著しく合理性を欠く</p><span class="tag">高い壁</span><span class="cnt">7判例 14回</span></div>
+        <p class="say">規制権限の不行使が国賠法1条1項の適用上違法となる要件。<span class="sub">クロロキンが定式化し（結論は違法でない）、筑豊じん肺と水俣病関西訴訟が同じ年にこれを引いて違法とした。同じ物差しで結論が割れる。</span></p>
+        <p class="quote">その不行使が許容される限度を逸脱して著しく合理性を欠くと認められるときは、その不行使により被害を受けた者との関係において、国家賠償法１条１項の適用上違法となる<cite>筑豊じん肺・水俣病関西訴訟 ── いずれもクロロキンを引いている</cite></p>
+        <p class="say"><span class="sub">「著しく」と「許容される限度を逸脱して」を落とすと要件が緩むので、最も安い誤り肢になる。</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 損失補償 ───────────────────── -->
+  <section class="k-sec" id="hosho">
+    <h2>損失補償</h2>
+    <p class="k-note">総論の2件は憲法29条3項をどう使うかの話。ガソリンタンクと輪中堤は、そこから外れるものを切っていく各論。</p>
+    <div class="k-list">
+      <div class="kw how">
+        <div class="kw-head"><p class="term">正当な補償</p><span class="tag">総論</span><span class="cnt">農地改革／河川附近地制限令</span></div>
+        <p class="say">農地改革は自創法による買収について、憲法29条3項の正当な補償をしなければならないことは<span class="sub">「いうをまたない」</span>としたうえで、その額を合理的に算出された相当な額で足りるとした（相当補償説）。</p>
+      </div>
+      <div class="kw up">
+        <div class="kw-head"><p class="term">特別の犠牲を課したものとみる余地</p><span class="tag">補償あり</span><span class="cnt">2判例 2回</span></div>
+        <p class="say">補償規定が無くても、29条3項を直接の根拠として補償を請求できる余地を認めた。<span class="sub">「受忍すべきものとされる制限の範囲をこえ」が判定の言い回し。</span></p>
+        <p class="quote">単に一般的に当然に受忍すべきものとされる制限の範囲をこえ、特別の犠牲を課したものとみる余地が全くないわけではなく<cite>河川附近地制限令事件 ── 補償を請求できる余地がある</cite></p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">警察規制に基づく損失がたまたま現実化するに至ったものにすぎず</p><span class="tag">補償なし</span><span class="cnt">ガソリンタンク事件</span></div>
+        <p class="say">道路工事で移転を余儀なくされても、それは元から課されていた警察規制が現れただけ。<span class="sub">原告適格の「たまたま」と同じ論法が、損失補償で使われている。</span></p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">文化財的価値</p><span class="tag">補償なし</span><span class="cnt">輪中堤 5回</span></div>
+        <p class="say">経済的価値ではないから補償の対象にならない。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 審査の物差し ───────────────── -->
+  <section class="k-sec" id="monosashi">
+    <h2>憲法 ── 審査の物差し</h2>
+    <div class="k-list">
+      <div class="kw down">
+        <div class="kw-head"><p class="term">著しく不合理であることの明白である場合に限つて</p><span class="tag">合憲へ</span><span class="cnt">小売市場 2回</span></div>
+        <p class="say">明白性の原則。<span class="sub">立法府の裁量を尊重する側の物差しで、この語が出たら結論は合憲。</span></p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">間接的、付随的な制約に過ぎず</p><span class="tag">合憲へ</span><span class="cnt">猿払／孔子廟</span></div>
+        <p class="say">意見表明そのものを狙ったのではなく行動の禁止に伴うだけ、として制約を軽く見る。<span class="sub">猿払はこれで合憲、孔子廟は「とどまるとはいえない」と否定して違憲。同じ語が両側に出る。</span></p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">合理的関連性</p><span class="tag">物差し</span><span class="cnt">7判例 27回</span></div>
+        <p class="say">規制目的と手段の間に緩やかな結びつきがあれば足りるとする。<span class="sub">猿払が採った基準で、堀越の千葉補足意見がこれを名指しで批判している。</span></p>
+      </div>
+      <div class="kw up">
+        <div class="kw-head"><p class="term">相当の蓋然性</p><span class="tag">要件を上げる</span><span class="cnt">3判例 8回</span></div>
+        <p class="say">よど号が閲読制限について要求した水準。<span class="sub">堀越の補足意見いわく「明白かつ現在の危険」そのものではなく、その基本精神を反映させた限度。両者を同視する肢は誤り。</span></p>
+        <p class="quote">一般的、抽象的なおそれがあるというだけでは足りず<cite>よど号 ── ここでは「一般的、抽象的」が規制を否定する側に立つ</cite></p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">検閲</p><span class="tag">定義（4要素）</span><span class="cnt">5判例 51回</span></div>
+        <p class="say">①行政権が主体 ②思想内容等の表現物が対象 ③発表の禁止が目的 ④網羅的一般的に発表前に審査。<span class="sub">4つ全部そろって初めて検閲。ひとつでも欠ければ検閲ではない、という形で使う。税関検査が定義し、北方ジャーナルがそのまま引く。</span></p>
+        <p class="quote">行政権が主体となつて、思想内容等の表現物を対象とし、その全部又は一部の発表の禁止を目的として、対象とされる一定の表現物につき網羅的一般的に、発表前にその内容を審査した上、不適当と認めるものの発表を禁止すること<cite>税関検査（最大判昭59.12.12）</cite></p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">事前抑制</p><span class="tag">検閲とは別</span><span class="cnt">5判例 13回</span></div>
+        <p class="say">裁判所による出版物の事前差止めは<span class="sub">主体が行政権でないから検閲ではない。</span>そのうえで21条1項の事前抑制として別に審査する。<b>検閲に当たるか</b>と<b>事前抑制として許されるか</b>を混ぜた肢は誤り。</p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">通常の判断能力を有する一般人</p><span class="tag">明確性の原則</span><span class="cnt">3判例 9回</span></div>
+        <p class="say">刑罰法規があいまい不明確で憲法31条に反するかの物差し。<span class="sub">基準は立法者でも裁判官でもなく一般人の理解に置かれる。徳島市公安条例が定式化し、ヘイトスピーチ条例がそのまま使っている。</span></p>
+      </div>
+      <div class="kw down">
+        <div class="kw-head"><p class="term">明らかな差し迫った危険の発生が具体的に予見される</p><span class="tag">不許可を正当化</span><span class="cnt">泉佐野市民会館</span></div>
+        <p class="say">公の施設の使用不許可が許される限界。<span class="sub">「単に危険な事態を生ずる蓋然性があるというだけでは足りず」とセットで書かれる。蓋然性で足りるとした肢は誤り。</span></p>
+      </div>
+      <div class="kw up">
+        <div class="kw-head"><p class="term">性質上可能なかぎり</p><span class="tag">適用を認める</span><span class="cnt">八幡製鉄</span></div>
+        <p class="say">憲法第三章の権利義務の各条項は、性質上可能なかぎり内国の法人にも適用される。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 政教分離と司法権 ───────────── -->
+  <section class="k-sec" id="seikyo">
+    <h2>憲法 ── 政教分離と司法権</h2>
+    <div class="k-list">
+      <div class="kw how">
+        <div class="kw-head"><p class="term">その目的が宗教的意義をもち、その効果が宗教に対する援助、助長、促進</p><span class="tag">目的効果基準</span><span class="cnt">2判例 10回</span></div>
+        <p class="say">「相当とされる限度を超える」かで結論を出す。<span class="sub">津地鎮祭が定式化し、愛媛玉串料が適用した。空知太・孔子廟はこの基準を使わず諸般の事情の総合判断に寄っており、そこが毎年問われる。</span></p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">一般市民法秩序と直接の関係を有しない内部的な問題にとどまる限り</p><span class="tag">司法審査の外</span><span class="cnt">富山大学 7回</span></div>
+        <p class="say">部分社会の法理。<span class="sub">「とどまる限り」＝裏返せば、一般市民法秩序に関わるなら審査は及ぶ。単位授与（認定）行為は「特段の事情のない限り」純然たる内部問題として対象外、専攻科修了の認定は別に扱われた。</span></p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">直接国家統治の基本に関する高度に政治性のある国家行為</p><span class="tag">統治行為</span><span class="cnt">苫米地／砂川</span></div>
+        <p class="say">法律上の争訟にあたり有効無効の判断が法律上可能であっても、審査権の外に置く。</p>
+      </div>
+      <div class="kw how">
+        <div class="kw-head"><p class="term">一見極めて明白に違憲無効であると認められない限りは</p><span class="tag">統治行為（変形）</span><span class="cnt">砂川 25回</span></div>
+        <p class="say">砂川は苫米地と違い、審査の余地を完全には閉じていない。<span class="sub">両者を同じ枠組みとして書いた肢は誤り。</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 混ざる語 ───────────────────── -->
+  <section class="k-sec" id="mazaru">
+    <h2>混ざる語<span class="n">同じ語が別の場面で逆に働く</span></h2>
+    <p class="k-note">ここが多肢選択で最も狙われる層。語を覚えても場面を取り違えると落ちる。</p>
+    <div class="k-tablewrap">
+      <table>
+        <thead><tr><th>語</th><th>場面 A</th><th>場面 B</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="kk">一般的・抽象的<small>9判例 14回</small></td>
+            <td><b>処分性</b> ── 一般的、抽象的だから処分でない（青写真・二項道路）。<b>否定側</b></td>
+            <td><b>人権制約</b> ── 一般的、抽象的なおそれでは足りない（よど号）。<b>規制を否定する側</b></td>
+          </tr>
+          <tr>
+            <td class="kk">外形<small>9判例 29回</small></td>
+            <td><b>国賠1条</b> ── 行為の外形が職務なら国が責任を負う（警察官拳銃）。<b>外形で決める</b></td>
+            <td><b>政教分離</b> ── 外形的側面のみにとらわれることなく判断（愛媛玉串料）。<b>外形で決めない</b></td>
+          </tr>
+          <tr>
+            <td class="kk">たまたま<small>9判例 10回</small></td>
+            <td><b>原告適格</b> ── たまたま受ける反射的利益（主婦連）。<b>原告適格なし</b></td>
+            <td><b>損失補償</b> ── 警察規制がたまたま現実化（ガソリンタンク）。<b>補償なし</b></td>
+          </tr>
+          <tr>
+            <td class="kk">社会観念<small>4判例 12回</small></td>
+            <td colspan="2"><b>裁量審査の物差し</b>。社会観念上著しく妥当を欠き裁量権を濫用（神戸税関）。使う場面が狭い</td>
+          </tr>
+          <tr>
+            <td class="kk">社会通念<small>21判例 72回</small></td>
+            <td colspan="2"><b>事実への当てはめ</b>。社会通念に従って客観的に判断（愛媛玉串料）、社会通念上不可能（訴えの利益）。守備範囲が広い</td>
+          </tr>
+          <tr>
+            <td class="kk">著しく<small>48判例 181回</small></td>
+            <td colspan="2">落とすと要件が緩む。<b>著しく</b>合理性を欠く／<b>著しく</b>妥当を欠く／<b>著しい</b>被害。修飾語1語を抜いた肢が最も安い誤り</td>
+          </tr>
+          <tr>
+            <td class="kk">専ら<small>48判例 110回</small></td>
+            <td><b>私人間効力</b> ── もつぱら国または公共団体と個人との関係を規律する（三菱樹脂）。<b>私人間に直接は及ばない</b></td>
+            <td><b>原告適格</b> ── 専ら公衆衛生の維持を目的とする規定（公衆浴場）。<b>業者の利益は保護範囲の外</b></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 判旨の在りか ───────────────── -->
+  <section class="k-sec" id="arika">
+    <h2>判旨の在りかを教える語</h2>
+    <p class="k-note">結論ではなく、どこを読むべきかを示す語。原審の判示を最高裁の判旨と取り違える事故は、ここを見落として起きる。</p>
+    <div class="k-tablewrap">
+      <table>
+        <thead><tr><th>語</th><th>働き</th><th>出現</th></tr></thead>
+        <tbody>
+          <tr><td class="kk">しかしながら</td><td>ここから最高裁。手前は原審の引用であることが多い</td><td>64判例 269回</td></tr>
+          <tr><td class="kk">と解するのが相当である</td><td>この文が判旨そのもの</td><td>63判例 151回</td></tr>
+          <tr><td class="kk">けだし</td><td>続くのは理由であって結論ではない</td><td>31判例 75回</td></tr>
+          <tr><td class="kk">もっとも</td><td>ここから裏返る。前で切った相手を後で救うことがある</td><td>44判例 129回</td></tr>
+          <tr><td class="kk">特段の事情のない限り</td><td>原則を述べて例外を残す</td><td>19判例 43回</td></tr>
+          <tr><td class="kk">直ちに〜ということはできない</td><td>否定はしないが結論も出さない</td><td>54判例 176回</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <a class="k-back" href="index.html">← 條文ドリルに戻る</a>
+
+  <footer>
+    出典：最高裁判所判決文（著作権法13条3号により権利の目的とならない）。引用は判旨を圧縮したもの。<br>
+    出現数は判決文全体からの機械的な計数で、上告理由・意見・反対意見を含む。頻度は重要度を意味しない。<br>
+    語がどの判例に属するかの判定に使うこと。
+  </footer>
+</div>
+
+</body>
+</html>

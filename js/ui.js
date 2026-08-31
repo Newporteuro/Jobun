@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260831i";
+export const VERSION = "20260831j";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260831i";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260831j";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260831i";
+} from "./sources.js?v=20260831j";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260831i";
-import { CASES } from "./cases.js?v=20260831i";
-import { HANREI } from "./hanrei.js?v=20260831i";
-import { JOUBUN } from "./joubun.js?v=20260831i";
+} from "./drill.js?v=20260831j";
+import { CASES } from "./cases.js?v=20260831j";
+import { HANREI } from "./hanrei.js?v=20260831j";
+import { JOUBUN } from "./joubun.js?v=20260831j";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -133,10 +133,11 @@ const MODE_NOTE = {
 };
 
 /* 出題面に出す形式名。いま何を解いているのかを問題側にも表示する */
+/* 並びは index.html の形式ボタンと揃える。よく使う3つが先 */
 const MODE_LABEL = {
-  blank: "穴埋め", descriptive: "条文40字", case: "事例記述",
-  doctrine: "判例法理", recall: "全文再現", hanrei: "判例○×", tashi: "多肢選択",
-  joubun: "条文穴埋め",
+  case: "事例記述", hanrei: "判例○×", tashi: "多肢選択",
+  blank: "穴埋め", descriptive: "条文40字", joubun: "条文穴埋め",
+  doctrine: "判例法理", recall: "全文再現",
 };
 
 /* ── 初期化 ── */
