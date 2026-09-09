@@ -5,7 +5,7 @@
    問題を組み立てる。採点の一致率もここ。
    通信もしないし、画面にも触らない ── 入力と出力だけの世界。
    ══════════════════════════════════════════════ */
-import { fullText } from "./sources.js?v=20260910e";   // ?v= は ui.js の VERSION と揃える
+import { fullText } from "./sources.js?v=20260910f";   // ?v= は ui.js の VERSION と揃える
 
 /* ══════════════════════════════════════════════
    条文の切り分けと、空欄にしてよい部分の判定
@@ -545,18 +545,4 @@ export function scoreCase(input, points) {
   const full = points.reduce((a, p) => a + p.point, 0);
   const earned = detail.reduce((a, d) => a + (d.hit ? d.point : 0), 0);
   return {detail, earned, full, pct: full ? Math.round(earned / full * 100) : 0};
-}
-
-export function makeDoctrine(d, showHint, key) {
-  const segs = splitSegments(d.statement);
-  const heads = sentenceHeads(segs), offs = endOffsets(segs);
-  let cand = segs.map((s, i) => i).filter(i => isBlankCandidate(segs[i].body, heads[i]));
-  if (!cand.length) return null;
-  cand = avoidRepeat(cand, segs, key);
-  const idx = weightedPick(cand, cand.map(i => positionWeight(offs[i], segs[i].body)));
-  const answer = segs[idx].body;
-  if (key) lastBlank.set(key, answer);
-  const shown = segs.map((s, i) => i === idx ? {body:mark(answer, showHint), d:s.d} : s);
-  const topic = [d.heading, d.term].filter(Boolean).join("／");
-  return {mode:"doctrine", answer, topic, question:joinSegments(shown), paragraphIndex:-1};
 }

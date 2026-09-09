@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260910e";
+export const VERSION = "20260910f";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910e";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910f";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
-  fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260910e";
+  fetchWikitext, parsePrecedents, wikiURL,
+} from "./sources.js?v=20260910f";
 import {
-  makeBlank, makeDescriptive, makeDoctrine,
+  makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260910e";
-import { CASES } from "./cases.js?v=20260910e";
-import { HANREI } from "./hanrei.js?v=20260910e";
-import { JOUBUN } from "./joubun.js?v=20260910e";
+} from "./drill.js?v=20260910f";
+import { CASES } from "./cases.js?v=20260910f";
+import { HANREI } from "./hanrei.js?v=20260910f";
+import { JOUBUN } from "./joubun.js?v=20260910f";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -32,7 +32,6 @@ const state = {
   index: new Map(),      // lawId -> groups
   drill: null, article: null, ref: null, revealed: false,
   recent: [],            // 直近に出した条文（繰り返しを避ける）
-  lastDoctrine: null,
   kase: null,            // 出題中の事例問題
   recentCases: [],       // 直近に出した事例問題のid
   hanrei: null,          // 出題中の判例○×（判例と主張の組）
@@ -126,11 +125,9 @@ const MODE_NOTE = {
   blank:       "条文の一部を空欄にします。",
   descriptive: "条件節を残し、条文の効果部分を40字程度で書かせます。",
   case:        "本試験の記述式と同じ形式です。事例を読んで40字程度で答え、要素ごとの部分点で20点満点の採点をします。まだ解いていない問題と、前回の得点が低かった問題を重めに出します。",
-  doctrine:    "Wikibooks の解説欄から判例法理を出題します。編集者による記述のため、条文と違い誤りを含む可能性があります。",
   tashi:       "本試験の問41にあたる形式です。判決文の4箇所を空欄にし、20語の語群から選びます。各2点の8点。",
   joubun:      "条文の4箇所を語単位で空欄にし、語群から選びます。「穴埋め」が節を丸ごと空欄にするのに対し、こちらは数字・主体・使い分け（四分の一／三分の一、内閣／内閣総理大臣）を狙います。各2点の8点。",
   hanrei:      "憲法の判例について、一つの主張が判例に照らして正しいかを○×で答えます。本試験の5肢択一は独立した○×判断が5つ並んだものなので、その一つ分にあたります。",
-  recall:      "条見出しだけを頼りに、条文全体を書き起こします。",
 };
 
 /* 出題面に出す形式名。いま何を解いているのかを問題側にも表示する */
@@ -138,7 +135,6 @@ const MODE_NOTE = {
 const MODE_LABEL = {
   case: "事例記述", hanrei: "判例○×", tashi: "多肢選択",
   blank: "穴埋め", descriptive: "条文40字", joubun: "条文穴埋め",
-  doctrine: "判例法理", recall: "全文再現",
 };
 
 /* ── 初期化 ── */
@@ -209,8 +205,7 @@ function syncPanes() {
   $("#paneRange").hidden  = isCase || state.source !== "range";
   $("#paneNumber").hidden = isCase || state.source === "range";
   $("#modeNote").textContent = MODE_NOTE[state.mode];
-  $("#modeNote").className = "hint" + (state.mode === "doctrine" ? " warn" : "");
-  $("#optHint").hidden   = isCase || state.mode === "recall";
+  $("#optHint").hidden   = isCase;
   const isHanrei = state.mode === "hanrei";
   $("#optKobun").hidden  = !isHanrei;
   $("#kobunNote").hidden = !isHanrei;
@@ -869,47 +864,31 @@ async function present(ref, forced) {
   }
 
   let drill = null;
-  if (state.mode === "doctrine") {
-    let list = [];
-    try { const w = await fetchWikitext(ref.law, ref.num); if (w) list = parseDoctrines(w); } catch (e) {}
-    if (!list.length) {
-      if (forced) { setStatus(`<p class="msg info">${esc(tag)}には解説欄の記述がありませんでした。</p>`); return {ok:true}; }
-      return {ok:false, reason:`${tag}：解説欄に記述なし`};
+  if (!forced && isPoorQuestion(article, state.mode)) {
+    return {ok:false, reason:`${tag}：出題に適さない条文`};
+  }
+  if (state.mode === "blank") {
+    drill = makeBlank(article, state.showHint, state.emphasizeEnding, refKey(ref));
+  } else if (state.mode === "descriptive") {
+    drill = makeDescriptive(article, state.showHint, refKey(ref));
+    // 条番号を指定された場合は、40字が作れなくても穴埋めに落として出す
+    if (!drill && forced) {
+      drill = makeBlank(article, state.showHint, true, refKey(ref));
+      if (drill) drill.notice = "この条文は効果部分が40字に届かないため、穴埋めとして出題します。";
     }
-    const fresh = list.filter(x => x.statement !== state.lastDoctrine);
-    const chosen = pick(fresh.length ? fresh : list);
-    state.lastDoctrine = chosen.statement;
-    drill = makeDoctrine(chosen, state.showHint, refKey(ref));
-    if (!drill) return {ok:forced, reason:`${tag}：解説から空欄を作れず`};
   } else {
-    if (!forced && isPoorQuestion(article, state.mode)) {
-      return {ok:false, reason:`${tag}：出題に適さない条文`};
-    }
-    if (state.mode === "blank") {
-      drill = makeBlank(article, state.showHint, state.emphasizeEnding, refKey(ref));
-    } else if (state.mode === "descriptive") {
-      drill = makeDescriptive(article, state.showHint, refKey(ref));
-      // 条番号を指定された場合は、40字が作れなくても穴埋めに落として出す
-      if (!drill && forced) {
-        drill = makeBlank(article, state.showHint, true, refKey(ref));
-        if (drill) drill.notice = "この条文は効果部分が40字に届かないため、穴埋めとして出題します。";
-      }
-    }
-    else if (state.mode === "recall") {
-      drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1};
-    } else {
-      // 知らない形式を黙って全文再現に落とすと、原因の分からない出題になる。
-      // 起きるとすれば index.html だけ新しくスクリプトが古い場合なので、そう伝える。
-      setStatus(`<p class="msg err">形式「${esc(state.mode)}」を解釈できませんでした。`
-        + `<br>古いスクリプトが残っている可能性があります。ページを再読み込みしてください。</p>`);
-      return {ok:true};
-    }
-    if (!drill) {
-      if (!forced) return {ok:false, reason:`${tag}：空欄を作れず`};
-      // 黙って全文再現に化けると、なぜこの問題が出たのか分からなくなる
-      drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1,
-               notice:"この条文は空欄にできる部分がないため、全文再現として出題します。"};
-    }
+    // 知らない形式を黙って別の形に落とすと、原因の分からない出題になる。
+    // 起きるとすれば index.html だけ新しくスクリプトが古い場合なので、そう伝える。
+    setStatus(`<p class="msg err">形式「${esc(state.mode)}」を解釈できませんでした。`
+      + `<br>古いスクリプトが残っている可能性があります。ページを再読み込みしてください。</p>`);
+    return {ok:true};
+  }
+  // 条番号を指定されたのに空欄が作れないときだけ、条文をそのまま見せる受け皿に落ちる。
+  // 形式としては選べない（recall は内部の予備）。黙って化けると理由が分からないので notice を付ける。
+  if (!drill) {
+    if (!forced) return {ok:false, reason:`${tag}：空欄を作れず`};
+    drill = {mode:"recall", answer:fullText(article), question:"この条文を書き起こしてください。", paragraphIndex:-1,
+             notice:"この条文は空欄にできる部分がないため、条文をそのまま表示します。"};
   }
 
   state.article = article; state.ref = ref; state.drill = drill;
@@ -942,11 +921,7 @@ function renderSheet() {
 
   const w = weightOf(ref.law.id, ref.num);
   const stars = w ? "★".repeat(Math.min(w.weight, 3)) : "";
-  const isDoctrine = drill.mode === "doctrine";
-
-  const body = isDoctrine
-    ? renderArticle(article, -1, null)   // 判例法理では条文を参照として添える
-    : renderArticle(article, drill.paragraphIndex, drill.question);
+  const body = renderArticle(article, drill.paragraphIndex, drill.question);
 
   html = `
     <div class="artline">
@@ -954,19 +929,14 @@ function renderSheet() {
       ${article.caption ? `<span class="artcap">${esc(article.caption)}</span>` : ""}
     </div>
     <div class="meta">
-      <span class="modetag">${esc(MODE_LABEL[drill.mode] || drill.mode)}</span>
+      <span class="modetag">${esc(MODE_LABEL[drill.mode] || "全文表示")}</span>
       ${stars ? `<span class="stars">${stars}</span><span>${esc(w.note)}</span>` : `<span>重要度は未設定</span>`}
     </div>`;
 
   // 形式が切り替わったときは理由を書く。黙って別形式になると混乱する
   if (drill.notice) html += `<p class="msg info">${esc(drill.notice)}</p>`;
 
-  if (isDoctrine) {
-    html += `<p class="label">空欄を埋めてください</p>
-      <div class="jobun">${drill.topic ? `<span class="topic">${esc(drill.topic)}</span>` : ""}${drill.question}</div>
-      <p class="label" style="margin-top:16px">参照条文</p>
-      <div class="ref">${esc(body)}</div>`;
-  } else if (drill.mode === "recall") {
+  if (drill.mode === "recall") {
     html += `<p class="label">条文を書き起こしてください</p>
       <div class="jobun">${esc(drill.question)}</div>`;
   } else {
@@ -1048,7 +1018,7 @@ function grade() {
     <p class="label">${drill.mode === "recall" ? "正解" : "空欄の正解"}</p>
     <div class="answerbox">${esc(drill.answer)}</div>`;
 
-  if (drill.mode !== "doctrine" && drill.mode !== "recall") {
+  if (drill.mode !== "recall") {
     html += `<p class="label" style="margin-top:16px">条文全体</p>
       <div class="ref">${esc(fullText(article))}</div>`;
   }
