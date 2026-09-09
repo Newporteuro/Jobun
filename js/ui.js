@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260910b";
+export const VERSION = "20260910c";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910b";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910c";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, parseDoctrines, wikiURL,
-} from "./sources.js?v=20260910b";
+} from "./sources.js?v=20260910c";
 import {
   makeBlank, makeDescriptive, makeDoctrine,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260910b";
-import { CASES } from "./cases.js?v=20260910b";
-import { HANREI } from "./hanrei.js?v=20260910b";
-import { JOUBUN } from "./joubun.js?v=20260910b";
+} from "./drill.js?v=20260910c";
+import { CASES } from "./cases.js?v=20260910c";
+import { HANREI } from "./hanrei.js?v=20260910c";
+import { JOUBUN } from "./joubun.js?v=20260910c";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -272,7 +272,11 @@ function candidateRefs() {
   return out;
 }
 
-const MULTIPLIER = {flat:[1,1,1,1], normal:[1,2,4,7], focused:[1,3,9,20]};
+/* 添字は重要度（0＝未掲載）。「重要条文中心」だけ未掲載を 0 にして完全に外す。
+   行政書士法の指定試験機関や、戸籍法の重みを置いていない章のように、
+   出題範囲としては読み込むが練習する価値の薄い条文を混ぜないため。
+   重みが全部 0 の範囲では weightedPick が一様抽選に落ちるので、出題は詰まらない。 */
+const MULTIPLIER = {flat:[1,1,1,1], normal:[1,2,4,7], focused:[0,3,9,20]};
 function drawRef(refs) {
   const m = MULTIPLIER[state.weight];
   const recent = new Set(state.recent);
