@@ -127,6 +127,11 @@ export async function fetchIndex(law) {
 
   for (const a of main.querySelectorAll("Article")) {
     if (a.getAttribute("Delete") === "true") continue;
+    // 本文が「削除」だけの条文。Delete 属性が付かないまま残っている法令がある
+    // （行政書士法5条・18条の3）ので、項の中身を見て弾く。条名を含む
+    // textContent で見ると「第五条削除」になり判定できないことに注意。
+    const body = kids(a, "Paragraph").map(p => txt(p)).join("");
+    if (body.replace(/[\s　]/g, "") === "削除") continue;
     const num = a.getAttribute("Num");
     if (!num || seen.has(num)) continue;
     seen.add(num);
