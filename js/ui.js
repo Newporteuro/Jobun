@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260910g";
+export const VERSION = "20260910h";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910g";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910h";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260910g";
+} from "./sources.js?v=20260910h";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260910g";
-import { CASES } from "./cases.js?v=20260910g";
-import { HANREI } from "./hanrei.js?v=20260910g";
-import { JOUBUN } from "./joubun.js?v=20260910g";
+} from "./drill.js?v=20260910h";
+import { CASES } from "./cases.js?v=20260910h";
+import { HANREI } from "./hanrei.js?v=20260910h";
+import { JOUBUN } from "./joubun.js?v=20260910h";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -61,6 +61,13 @@ const state = {
 const PICK_MODES = ["hanrei", "tashi", "joubun", "joubunox", "case"];
 const PICK_GROUP_LABEL = {hanrei:"テーマ", tashi:"テーマ", joubun:"章", joubunox:"章", case:"分野"};
 
+/* 章やテーマの上にもう一段、法令（科目）の階層を置く。条文穴埋めと条文○×は
+   憲法の章と行政書士法の章が同じ一覧に並ぶので、「憲法だけ」を選べないと辛い。
+   事例記述は分野そのものがグループなので、この階層は要らない。 */
+const PICK_TOP_LABEL = {hanrei:"科目", tashi:"科目", joubun:"法令", joubunox:"法令"};
+const pickTopOf = (mode, x) =>
+  (mode === "joubun" || mode === "joubunox") ? x.law : x.field;
+
 const pickGroupOf = (mode, x) =>
   (mode === "joubun" || mode === "joubunox") ? x.chapter : mode === "case" ? x.field : x.theme;
 const pickLabelOf = (mode, x) =>
@@ -94,6 +101,8 @@ function applyPick(list, mode) {
   if (!v) return list;
   const sub = v.startsWith("i:")
     ? list.filter(x => x.id === v.slice(2))
+    : v.startsWith("l:")
+    ? list.filter(x => pickTopOf(mode, x) === v.slice(2))
     : list.filter(x => pickGroupOf(mode, x) === v.slice(2));
   return sub.length ? sub : list;
 }
@@ -104,8 +113,17 @@ function syncPick() {
   if (!on) return;
   const mode = state.mode, src = pickSource(mode);
   const groups = [...new Set(src.map(x => pickGroupOf(mode, x)))].sort((a, b) => pickOrd(a) - pickOrd(b));
-  const out = [`<option value="">すべて（${src.length}件）</option>`,
-               `<optgroup label="${PICK_GROUP_LABEL[mode]}">`];
+  const out = [`<option value="">すべて（${src.length}件）</option>`];
+  if (PICK_TOP_LABEL[mode]) {
+    const tops = [...new Set(src.map(x => pickTopOf(mode, x)))].filter(Boolean);
+    if (tops.length > 1) {
+      out.push(`<optgroup label="${PICK_TOP_LABEL[mode]}">`);
+      for (const t of tops)
+        out.push(`<option value="l:${esc(t)}">${esc(t)}（${src.filter(x => pickTopOf(mode, x) === t).length}件）</option>`);
+      out.push(`</optgroup>`);
+    }
+  }
+  out.push(`<optgroup label="${PICK_GROUP_LABEL[mode]}">`);
   for (const g of groups)
     out.push(`<option value="g:${esc(g)}">${esc(g)}（${src.filter(x => pickGroupOf(mode, x) === g).length}件）</option>`);
   out.push(`</optgroup>`, `<optgroup label="個別">`);
