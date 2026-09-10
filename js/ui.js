@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260910q";
+export const VERSION = "20260910r";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910q";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910r";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260910q";
+} from "./sources.js?v=20260910r";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260910q";
-import { CASES } from "./cases.js?v=20260910q";
-import { HANREI } from "./hanrei.js?v=20260910q";
-import { JOUBUN } from "./joubun.js?v=20260910q";
+} from "./drill.js?v=20260910r";
+import { CASES } from "./cases.js?v=20260910r";
+import { HANREI } from "./hanrei.js?v=20260910r";
+import { JOUBUN } from "./joubun.js?v=20260910r";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -85,14 +85,19 @@ function pickSource(mode) {
 /* グループを教材の目次の順に並べる。
    判例のテーマは「人権4 幸福追求権と法の下の平等」「統治5 裁判所」のように
    基本テキストの編と章に合わせてあるので、その番号で並べればそのまま目次になる。
-   条文穴埋めの章（第4章 国会）は憲法自身の章なので、章番号で並べる。 */
+   条文穴埋めの章（第4章 国会）は憲法自身の章なので、章番号で並べる。
+
+   章番号をそのまま返すと、接頭辞を持つ章と番号がぶつかる。「民法1 相殺」は
+   0*100+1 で 1、「第1章 天皇」も 1 になり、民法と憲法が交互に並んでしまう。
+   憲法の章は 100 番台に逃がす。この帯を使うのは判例のテーマ（人権1〜）だが、
+   テーマと章が同じ一覧に出ることはないので競合しない。 */
 const PICK_SECTION = ["民法", "人権", "統治", "行為", "行手", "行不", "行訴", "国賠", "損失", "地自",
                        "行書", "住基", "戸籍", "情開", "個情"];
 function pickOrd(g) {
   const m = /^([^\d\s]+)(\d+)/.exec(g);
   if (m && PICK_SECTION.includes(m[1])) return PICK_SECTION.indexOf(m[1]) * 100 + (+m[2]);
   const c = /第(\d+)章/.exec(g);
-  return c ? +c[1] : 999;
+  return c ? 100 + (+c[1]) : 999;
 }
 
 /** 選ばれている範囲だけに絞る。空になったら全体を返す */
@@ -127,7 +132,12 @@ function syncPick() {
   for (const g of groups)
     out.push(`<option value="g:${esc(g)}">${esc(g)}（${src.filter(x => pickGroupOf(mode, x) === g).length}件）</option>`);
   out.push(`</optgroup>`, `<optgroup label="個別">`);
-  for (const x of src) out.push(`<option value="i:${esc(x.id)}">${esc(pickLabelOf(mode, x))}</option>`);
+  // 個別も上のグループと同じ順に並べる。データに足した順のままだと、
+  // 末尾に足した民法が行政法の後ろに回り、民法・行政法・民法と分断される
+  const gi = new Map(groups.map((g, i) => [g, i]));
+  const items = src.map((x, i) => [x, i]).sort((a, b) =>
+    (gi.get(pickGroupOf(mode, a[0])) - gi.get(pickGroupOf(mode, b[0]))) || (a[1] - b[1]));
+  for (const [x] of items) out.push(`<option value="i:${esc(x.id)}">${esc(pickLabelOf(mode, x))}</option>`);
   out.push(`</optgroup>`);
   const sel = $("#pick");
   sel.innerHTML = out.join("");
