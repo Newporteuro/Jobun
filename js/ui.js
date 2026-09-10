@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260910f";
+export const VERSION = "20260910g";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910f";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910g";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260910f";
+} from "./sources.js?v=20260910g";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260910f";
-import { CASES } from "./cases.js?v=20260910f";
-import { HANREI } from "./hanrei.js?v=20260910f";
-import { JOUBUN } from "./joubun.js?v=20260910f";
+} from "./drill.js?v=20260910g";
+import { CASES } from "./cases.js?v=20260910g";
+import { HANREI } from "./hanrei.js?v=20260910g";
+import { JOUBUN } from "./joubun.js?v=20260910g";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -40,6 +40,8 @@ const state = {
   recentTashi: [],       // 直近に出した多肢選択のid
   joubun: null,          // 出題中の条文穴埋め
   recentJoubun: [],      // 直近に出した条文穴埋めのid
+  joubunox: null,        // 出題中の条文○×
+  recentJoubunox: [],    // 直近に出した条文○×のkey
   maru: "",              // ○×の選択
   kobun: true,           // 判例○×を判決文型で出すか
   pickByMode: {},        // 形式ごとの出題範囲の絞り込み（"" ／ g:グループ ／ i:id）
@@ -56,18 +58,18 @@ const state = {
    値は "" ／ "g:<グループ名>" ／ "i:<id>" の3種。
    絞った結果が空になったときは全体に戻す。出題できない状態を作らないため。
    ══════════════════════════════════════════════ */
-const PICK_MODES = ["hanrei", "tashi", "joubun", "case"];
-const PICK_GROUP_LABEL = {hanrei:"テーマ", tashi:"テーマ", joubun:"章", case:"分野"};
+const PICK_MODES = ["hanrei", "tashi", "joubun", "joubunox", "case"];
+const PICK_GROUP_LABEL = {hanrei:"テーマ", tashi:"テーマ", joubun:"章", joubunox:"章", case:"分野"};
 
 const pickGroupOf = (mode, x) =>
-  mode === "joubun" ? x.chapter : mode === "case" ? x.field : x.theme;
+  (mode === "joubun" || mode === "joubunox") ? x.chapter : mode === "case" ? x.field : x.theme;
 const pickLabelOf = (mode, x) =>
-  mode === "joubun" ? `${x.cite}　${x.title}`
+  (mode === "joubun" || mode === "joubunox") ? `${x.cite}　${x.title}`
 : mode === "case"   ? `${x.field}　${x.topic}`
 :                     `${x.caseName}（${x.cite}）`;
 
 function pickSource(mode) {
-  if (mode === "joubun") return JOUBUN;
+  if (mode === "joubun" || mode === "joubunox") return JOUBUN;
   if (mode === "case")   return CASES;
   if (mode === "tashi")  return tashiAll();
   return HANREI;
@@ -128,12 +130,13 @@ const MODE_NOTE = {
   tashi:       "本試験の問41にあたる形式です。判決文の4箇所を空欄にし、20語の語群から選びます。各2点の8点。",
   joubun:      "条文の4箇所を語単位で空欄にし、語群から選びます。「穴埋め」が節を丸ごと空欄にするのに対し、こちらは数字・主体・使い分け（四分の一／三分の一、内閣／内閣総理大臣）を狙います。各2点の8点。",
   hanrei:      "憲法の判例について、一つの主張が判例に照らして正しいかを○×で答えます。本試験の5肢択一は独立した○×判断が5つ並んだものなので、その一つ分にあたります。",
+  joubunox:    "条文穴埋めと同じ素材から、条文の一箇所を入れ替えた記述を出します。そのままなら○、入れ替わっていれば×。5肢択一の一肢分にあたります。○と×は半々で出ます。",
 };
 
 /* 出題面に出す形式名。いま何を解いているのかを問題側にも表示する */
 /* 並びは index.html の形式ボタンと揃える。よく使う3つが先 */
 const MODE_LABEL = {
-  case: "事例記述", hanrei: "判例○×", tashi: "多肢選択",
+  case: "事例記述", hanrei: "判例○×", joubunox: "条文○×", tashi: "多肢選択",
   blank: "穴埋め", descriptive: "条文40字", joubun: "条文穴埋め",
 };
 
@@ -198,7 +201,7 @@ function bindSwitch(sel, fn) {
 
 function syncPanes() {
   // 事例記述は自前の問題バンクから出すので、出題元の選択は使わない
-  const isCase = ["case","hanrei","tashi","joubun"].includes(state.mode);
+  const isCase = ["case","hanrei","tashi","joubun","joubunox"].includes(state.mode);
   const isKijutsu = state.mode === "case";
   $("#sourceLabel").hidden = isCase;
   $("#segSource").hidden  = isCase;
@@ -296,6 +299,7 @@ async function draw() {
     if (state.mode === "hanrei") { presentHanrei(); return; }
     if (state.mode === "tashi")  { presentTashi();  return; }
     if (state.mode === "joubun") { presentJoubun(); return; }
+    if (state.mode === "joubunox") { presentJoubunOx(); return; }
     if (state.source === "number") {
       const id = $("#manualLaw").value;
       const law = Object.values(LAWS).find(l => l.id === id);
@@ -844,6 +848,166 @@ function buildJoubunLog(j, blanks, chosen, earned) {
       const m = MARU[i], ok = chosen[m] === b.word;
       return `  ${ok ? "○" : "×"} ${m} 正解「${b.word}」` + (ok ? "" : ` ／ 選んだのは「${chosen[m]}」`);
     }),
+    "コメント: ",
+    "",
+  ].join("\n");
+}
+
+/* ═══════════════════════════════════════
+   条文○×（本試験の5肢択一の一肢にあたる）
+
+   条文穴埋めのデータをそのまま使う。1空欄は「正しい語1つ＋誤りの語4つ」を
+   持っているので、正解語のまま出せば○、撹乱肢に差し替えれば×の肢になる。
+   問題文を別に書き起こす必要がない。
+
+   ただし撹乱肢を入れれば必ず明確な誤りになるとは限らない。
+   「信用又は品位」を「信用又は名誉」にしても、条文の文言としては誤りだが
+   内容として明確に間違いとは言いにくい。そういう空欄は ox:false で外す。
+
+   肢は passage を ／ で切った一文から作る。号だけでは短すぎるので、
+   40字に満たなければ手前の柱書をつないでいく。
+   ═══════════════════════════════════════ */
+
+/** 対象の空欄を含む一文。短ければ手前の段をつないで肢の体裁にする */
+function joubunOxSentence(j, word) {
+  const segs = j.passage.split("／");
+  let i = segs.findIndex(s => s.includes("｛" + word + "｝"));
+  if (i < 0) return null;
+  const parts = [segs[i]];
+  let len = segs[i].replace(/[｛｝]/g, "").length;
+  while (len < 40 && i > 0) {
+    i--;
+    parts.unshift(segs[i]);
+    len += segs[i].replace(/[｛｝]/g, "").length;
+  }
+  return parts.join("\n");
+}
+
+/** 印を外して平文にする。対象の空欄だけ decoy に差し替える（null なら正解のまま） */
+const joubunOxText = (sentence, word, decoy) =>
+  sentence.replace(/｛([^｝]+)｝/g, (_, w) => (w === word && decoy) ? decoy : w);
+
+function joubunOxPool() {
+  const out = [];
+  for (const j of applyPick(JOUBUN, "joubunox")) {
+    (j.blanks || []).forEach((b, i) => {
+      if (b.ox === false) return;                 // 肢にすると誤りが曖昧になる空欄
+      if (!(b.decoys || []).length) return;
+      if (!joubunOxSentence(j, b.word)) return;
+      out.push({j, b, key: `${j.id}#${i}`});
+    });
+  }
+  return out;
+}
+
+/** 記録から空欄ごとの直近の正誤を読む。判例○×の hanreiScores と同じ考え方 */
+function joubunOxScores() {
+  const m = new Map();
+  for (const text of readLog()) {
+    const key = (/\[条文○× ([^\]]+)\]/.exec(text) || [])[1];
+    const res = /判定:\s*(正解|不正解)/.exec(text);
+    if (!key || !res) continue;
+    m.set(key, res[1] === "正解" ? 1 : 0);
+  }
+  return m;
+}
+
+function drawJoubunOx() {
+  const scores = joubunOxScores();
+  const pool = joubunOxPool();
+  const fresh = pool.filter(p => !state.recentJoubunox.includes(p.key));
+  const base = fresh.length ? fresh : pool;
+  const unseen = base.filter(p => !scores.has(p.key));
+  const target = unseen.length ? unseen : base;
+  const p = weightedPick(target, target.map(x => {
+    const s = scores.get(x.key);
+    if (s === undefined) return 8;   // 未出題
+    return s ? 1 : 6;                // 間違えたものを重く
+  }));
+  state.recentJoubunox = [p.key, ...state.recentJoubunox.filter(k => k !== p.key)]
+    .slice(0, Math.max(1, pool.length - 1));
+  return p;
+}
+
+function presentJoubunOx() {
+  const pool = joubunOxPool();
+  if (!pool.length) { setStatus("条文○×の問題がまだありません。"); return; }
+  const p = drawJoubunOx();
+  // ○と×が半々になるようにする。片寄ると「迷ったら×」が当たってしまう
+  const ok = Math.random() < 0.5;
+  const decoy = ok ? null : pick(p.b.decoys);
+  const sentence = joubunOxSentence(p.j, p.b.word);
+  const shown = joubunOxText(sentence, p.b.word, decoy);
+
+  state.joubunox = {...p, ok, decoy, shown};
+  state.drill = {mode:"joubunox", answer: ok ? "○" : "×", paragraphIndex:-1};
+  state.ref = null; state.article = null;
+  setStatus("");
+
+  const html = `
+    <div class="artline">
+      <span class="artno">${esc(p.j.law)}　${esc(p.j.cite)}</span>
+      <span class="artcap">${esc(p.j.title)}</span>
+    </div>
+    <div class="meta">
+      <span class="modetag">${esc(MODE_LABEL.joubunox)}</span>
+      <span>次の条文の記述は正しいですか</span>
+    </div>
+    <div class="jobun">${esc(shown)}</div>
+    <div class="answer">
+      <div class="seg" id="segMaru">
+        <button data-v="○" aria-pressed="false">○　正しい</button>
+        <button data-v="×" aria-pressed="false">×　誤り</button>
+      </div>
+      <button class="primary" id="grade" style="margin-top:16px">採点する</button>
+    </div>
+    <div id="result"></div>`;
+
+  const sheet = $("#sheet");
+  sheet.innerHTML = html;
+  sheet.hidden = false;
+  $("#cases").hidden = true;
+  state.maru = "";
+  bindSeg("#segMaru", v => { state.maru = v; });
+  $("#grade").addEventListener("click", gradeJoubunOx);
+  sheet.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function gradeJoubunOx() {
+  const q = state.joubunox;
+  if (!state.maru) { setStatus("○か×を選んでください。"); return; }
+  state.revealed = true;
+  const correct = (state.maru === "○") === q.ok;
+
+  const verdict = q.ok
+    ? "○　条文のとおり"
+    : `×　条文は「${esc(q.b.word)}」。示したのは「${esc(q.decoy)}」`;
+
+  const html = `
+    <div class="score"><span class="label" style="margin:0">判定</span>
+      <span class="n ${correct ? "hi" : "lo"}">${correct ? "正解" : "不正解"}</span></div>
+    <p class="topicline">${esc(q.j.law)}　${esc(q.j.cite)}　${esc(q.j.chapter)}</p>
+    <p class="label">この記述は</p>
+    <div class="answerbox">${verdict}</div>
+    <p class="label" style="margin-top:12px">なぜここが問われるか</p>
+    <div class="answerbox alt">${esc(q.b.why)}</div>
+    <div class="commentary">${esc(q.j.trap)}</div>`;
+
+  state.lastLog = buildJoubunOxLog(q, state.maru, correct);
+  appendLog(state.lastLog);
+  showResult(html);
+}
+
+function buildJoubunOxLog(q, chose, correct) {
+  return [
+    "────────────────",
+    `${new Date().toLocaleString("ja-JP")}　版 ${VERSION}`,
+    `[条文○× ${q.key}] ${q.j.law} ${q.j.cite}　${q.j.title}`,
+    `肢: ${q.shown.replace(/\n/g, " ")}`,
+    `私の解答: ${chose}　／　正解: ${q.ok ? "○" : "×"}`
+      + (q.ok ? "" : `（条文は「${q.b.word}」、示したのは「${q.decoy}」）`),
+    `判定: ${correct ? "正解" : "不正解"}`,
+    `理由: ${q.b.why}`,
     "コメント: ",
     "",
   ].join("\n");
