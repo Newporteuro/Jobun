@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260910h";
+export const VERSION = "20260910i";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910h";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910i";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260910h";
+} from "./sources.js?v=20260910i";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260910h";
-import { CASES } from "./cases.js?v=20260910h";
-import { HANREI } from "./hanrei.js?v=20260910h";
-import { JOUBUN } from "./joubun.js?v=20260910h";
+} from "./drill.js?v=20260910i";
+import { CASES } from "./cases.js?v=20260910i";
+import { HANREI } from "./hanrei.js?v=20260910i";
+import { JOUBUN } from "./joubun.js?v=20260910i";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -886,6 +886,12 @@ function buildJoubunLog(j, blanks, chosen, earned) {
    40字に満たなければ手前の柱書をつないでいく。
    ═══════════════════════════════════════ */
 
+/* ○×に使える撹乱肢。ox が配列ならそれだけを使う。
+   穴埋めの撹乱肢は「語群から正確な文言を選ばせる」ための同義語を含むことがあり
+   （見やすい場所／目につきやすい箇所）、それを肢にすると内容として誤りにならない。
+   穴埋めでは残したまま、○×からだけ外すためにこの一段を挟む。 */
+const oxDecoys = b => Array.isArray(b.ox) ? b.ox : (b.decoys || []);
+
 /** 対象の空欄を含む一文。短ければ手前の段をつないで肢の体裁にする */
 function joubunOxSentence(j, word) {
   const segs = j.passage.split("／");
@@ -910,7 +916,7 @@ function joubunOxPool() {
   for (const j of applyPick(JOUBUN, "joubunox")) {
     (j.blanks || []).forEach((b, i) => {
       if (b.ox === false) return;                 // 肢にすると誤りが曖昧になる空欄
-      if (!(b.decoys || []).length) return;
+      if (!oxDecoys(b).length) return;
       if (!joubunOxSentence(j, b.word)) return;
       out.push({j, b, key: `${j.id}#${i}`});
     });
@@ -953,7 +959,7 @@ function presentJoubunOx() {
   const p = drawJoubunOx();
   // ○と×が半々になるようにする。片寄ると「迷ったら×」が当たってしまう
   const ok = Math.random() < 0.5;
-  const decoy = ok ? null : pick(p.b.decoys);
+  const decoy = ok ? null : pick(oxDecoys(p.b));
   const sentence = joubunOxSentence(p.j, p.b.word);
   const shown = joubunOxText(sentence, p.b.word, decoy);
 
@@ -1009,6 +1015,7 @@ function gradeJoubunOx() {
     <div class="answerbox">${verdict}</div>
     <p class="label" style="margin-top:12px">なぜここが問われるか</p>
     <div class="answerbox alt">${esc(q.b.why)}</div>
+    <p class="label" style="margin-top:12px">この条文全体の注意点</p>
     <div class="commentary">${esc(q.j.trap)}</div>`;
 
   state.lastLog = buildJoubunOxLog(q, state.maru, correct);
