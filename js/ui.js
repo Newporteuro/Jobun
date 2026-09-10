@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260910n";
+export const VERSION = "20260910p";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910n";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260910p";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260910n";
+} from "./sources.js?v=20260910p";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260910n";
-import { CASES } from "./cases.js?v=20260910n";
-import { HANREI } from "./hanrei.js?v=20260910n";
-import { JOUBUN } from "./joubun.js?v=20260910n";
+} from "./drill.js?v=20260910p";
+import { CASES } from "./cases.js?v=20260910p";
+import { HANREI } from "./hanrei.js?v=20260910p";
+import { JOUBUN } from "./joubun.js?v=20260910p";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -86,7 +86,7 @@ function pickSource(mode) {
    判例のテーマは「人権4 幸福追求権と法の下の平等」「統治5 裁判所」のように
    基本テキストの編と章に合わせてあるので、その番号で並べればそのまま目次になる。
    条文穴埋めの章（第4章 国会）は憲法自身の章なので、章番号で並べる。 */
-const PICK_SECTION = ["人権", "統治", "行為", "行手", "行不", "行訴", "国賠", "損失", "地自",
+const PICK_SECTION = ["民法", "人権", "統治", "行為", "行手", "行不", "行訴", "国賠", "損失", "地自",
                        "行書", "住基", "戸籍", "情開", "個情"];
 function pickOrd(g) {
   const m = /^([^\d\s]+)(\d+)/.exec(g);
