@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260913a";
+export const VERSION = "20260913c";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260913a";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260913c";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260913a";
+} from "./sources.js?v=20260913c";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260913a";
-import { CASES } from "./cases.js?v=20260913a";
-import { HANREI } from "./hanrei.js?v=20260913a";
-import { JOUBUN } from "./joubun.js?v=20260913a";
+} from "./drill.js?v=20260913c";
+import { CASES } from "./cases.js?v=20260913c";
+import { HANREI } from "./hanrei.js?v=20260913c";
+import { JOUBUN } from "./joubun.js?v=20260913c";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -653,6 +653,15 @@ function presentTashi() {
       `</select>`;
   });
 
+  /* 事実欄は判例○×と共用なので、空欄の答えがそのまま書いてあることがある
+     （京都府学連事件の「肖像権を保障した憲法13条」、孔子廟事件の「儒教」など、
+     点検したら33件あった）。選ばれた4語だけを本文と同じ記号で伏せる。
+     長い語から先に当て、短い語が長い語の一部を食わないようにする。 */
+  const hide = blanks.map((b, i) => [esc(b.word), MARU[i]]).sort((a, b) => b[0].length - a[0].length);
+  const factsHtml = esc(h.facts).replace(
+    new RegExp(hide.map(([w]) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g"),
+    s => `<span class="again">［${hide.find(([w]) => w === s)[1]}］</span>`);
+
   const html = `
     <div class="artline">
       <span class="artno">多肢選択式　${esc(h.field)}</span>
@@ -662,7 +671,7 @@ function presentTashi() {
       <span class="modetag">${esc(MODE_LABEL.tashi)}</span>
       <span>次の文章の空欄に語群から適する語を入れてください</span>
     </div>
-    <div class="facts">${esc(h.facts)}</div>
+    <div class="facts">${factsHtml}</div>
     <div class="ask passage">${body}</div>
     <div class="answer">
       <p class="label">語群</p>
