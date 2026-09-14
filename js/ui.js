@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260914b";
+export const VERSION = "20260914d";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260914b";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260914d";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260914b";
+} from "./sources.js?v=20260914d";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260914b";
-import { CASES } from "./cases.js?v=20260914b";
-import { HANREI } from "./hanrei.js?v=20260914b";
-import { JOUBUN } from "./joubun.js?v=20260914b";
+} from "./drill.js?v=20260914d";
+import { CASES } from "./cases.js?v=20260914d";
+import { HANREI } from "./hanrei.js?v=20260914d";
+import { JOUBUN } from "./joubun.js?v=20260914d";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
