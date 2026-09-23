@@ -238,3 +238,4 @@ footer a{color:var(--ai)}
 .rec td.n.hi{color:var(--wakaba)} .rec td.n.mid{color:#9A6B1E} .rec td.n.lo{color:var(--shu)}
 .rec .recg{display:block;font-size:11px;color:var(--sumi-soft)}
 .rec button.recgo{padding:6px 10px;font-size:12px;white-space:nowrap;width:auto}
+.recun summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ai);padding:6px 0}

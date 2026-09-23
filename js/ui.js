@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260923o";
+export const VERSION = "20260923p";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260923o";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260923p";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260923o";
+} from "./sources.js?v=20260923p";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260923o";
-import { CASES } from "./cases.js?v=20260923o";
-import { HANREI } from "./hanrei.js?v=20260923o";
-import { JOUBUN } from "./joubun.js?v=20260923o";
+} from "./drill.js?v=20260923p";
+import { CASES } from "./cases.js?v=20260923p";
+import { HANREI } from "./hanrei.js?v=20260923p";
+import { JOUBUN } from "./joubun.js?v=20260923p";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -1421,7 +1421,29 @@ function showRecord() {
   const box = $("#record");
   const mode = state.recMode;
   const rows = recordRows(mode);
-  const total = pickSource(mode).length;
+  const src = pickSource(mode);
+  const total = src.length;
+  /* ○×は判例・条文ごとに肢がいくつもあるので、何肢のうち何肢を解いたかも添える。
+     数え方は出題の母集団（hanreiPool / joubunOxPool）と同じにする */
+  const itemTotal = x => mode === "hanrei" ? x.items.length
+    : mode === "joubunox" ? (x.blanks || []).filter(b =>
+        b.ox !== false && oxDecoys(b).length && joubunOxSentence(x, b.word)).length
+    : 0;
+  const byId = new Map(src.map(x => [x.id, x]));
+  const itemNote = r => {
+    const x = byId.get(r.id), all = x ? itemTotal(x) : 0;
+    return all ? `（肢 ${r.items.size}/${all}）` : "";
+  };
+  // 記録のない問題は、出題範囲の選択と同じ目次の順に並べる
+  const seen = new Set(rows.map(r => r.id));
+  const unsolved = src.filter(x => !seen.has(x.id))
+    .map((x, i) => [x, i])
+    .sort((a, b) => (pickOrd(pickGroupOf(mode, a[0])) - pickOrd(pickGroupOf(mode, b[0]))) || (a[1] - b[1]))
+    .map(([x]) => x);
+  const unsolvedLabel = x => mode === "case" ? x.topic
+    : mode === "hanrei" || mode === "tashi" ? `${x.caseName}（${x.cite}）` : x.title;
+  const unsolvedGroup = x => mode === "joubun" || mode === "joubunox"
+    ? `${x.law}　${x.chapter}` : pickGroupOf(mode, x);
   // 事例記述は本試験と同じ20点満点で見せる。他は得点率
   const fmt = p => mode === "case" ? `${Math.round(p * 20)}点` : `${Math.round(p * 100)}%`;
   const cls = p => p >= 1 ? "hi" : p >= 0.7 ? "mid" : "lo";
@@ -1439,13 +1461,20 @@ function showRecord() {
     ${rows.length ? `<table class="rec">
       <thead><tr><th>問題</th><th>直近</th><th>平均</th><th>回</th><th></th></tr></thead>
       <tbody>${rows.map(r => `<tr>
-        <td><span class="recg">${esc(r.group || "")}</span>${esc(r.label)}</td>
+        <td><span class="recg">${esc(r.group || "")}</span>${esc(r.label)}<span class="recg">${itemNote(r)}</span></td>
         <td class="num n ${cls(r.last)}">${fmt(r.last)}</td>
         <td class="num">${fmt(r.sum / r.n)}</td>
         <td class="num">${r.n}</td>
         <td><button class="ghost recgo" data-id="${esc(r.id)}">解く</button></td>
       </tr>`).join("")}</tbody></table>`
-    : `<p class="hint">この形式の記録はまだありません。</p>`}`;
+    : `<p class="hint">この形式の記録はまだありません。</p>`}
+    ${unsolved.length ? `<details class="recun" style="margin-top:16px">
+      <summary>まだ解いていない問題（${unsolved.length}件）</summary>
+      <table class="rec"><tbody>${unsolved.map(x => `<tr>
+        <td><span class="recg">${esc(unsolvedGroup(x) || "")}</span>${esc(unsolvedLabel(x))}</td>
+        <td><button class="ghost recgo" data-id="${esc(x.id)}">解く</button></td>
+      </tr>`).join("")}</tbody></table></details>`
+    : `<p class="hint" style="margin-top:12px">この形式の問題は、すべて一度は解いています。</p>`}`;
   box.hidden = false;
   $("#logShow").textContent = "採点録を閉じる";
   $("#recTabs").addEventListener("click", e => {
