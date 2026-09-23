@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260923j";
-import { HANREI }    from "./js/hanrei.js?v=20260923j";
-import { JOUBUN }    from "./js/joubun.js?v=20260923j";
-import { scoreCase } from "./js/drill.js?v=20260923j";
+import { CASES }     from "./js/cases.js?v=20260923k";
+import { HANREI }    from "./js/hanrei.js?v=20260923k";
+import { JOUBUN }    from "./js/joubun.js?v=20260923k";
+import { scoreCase } from "./js/drill.js?v=20260923k";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -514,6 +514,12 @@ const PROBES = [
   ["kokubai-1-kouken", "公権力の行使は命令・強制を伴う権力的作用に限られ、教育活動は含まれない。", 0, 0],
   ["kokubai-1-kouken", "非権力的作用も含まれ、公立学校の教師の教育活動も公権力の行使に当たるから、A市は賠償責任を負う。", 20, 20],
   ["kokubai-1-kouken", "教育活動も公権力の行使に含まれる。", 8, 8],
+  ["kokubai-1-ihou", "起訴の時点においては、起訴するに足る相当の理由があれば足り、検察官が注意義務に違反するなどの事情がない限り、Aの主張は認められない。", 15, 15],  // 実際の答案（①抜け）
+  ["kokubai-1-ihou", "無罪判決が確定した以上、判決時を基準に逮捕も起訴も違法であり、Aの主張は認められる。", 0, 0],
+  ["kokubai-1-ihou", "無罪というだけで直ちに違法とはならない。", 5, 5],
+  ["kokubai-1-ihou", "起訴時に有罪と認められる嫌疑があれば足り、無罪となっても直ちに違法とはならず、主張は認められない。", 20, 20],
+  ["kokubai-1-ihou", "判決時の証拠を基準に、有罪の確信がなければ起訴は違法である。", 0, 0],
+  ["kokubai-1-ihou", "無罪となったので直ちに違法であり、嫌疑がなければ賠償が認められる。", 0, 0],
   ["kokubai-3",   "管理者はB県であるが、国は費用を半分負担しており、B県及び国対して損害賠償を請求できる。", 20, 20],  // 実際の答案
   ["kokubai-3",   "国は費用を負担していないので、国には請求できない。", 0, 0],
   ["kokubai-3",   "Aは管理者であるB県にのみ請求でき、国には請求できない。", 4, 4],
