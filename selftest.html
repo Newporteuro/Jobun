@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260923i";
-import { HANREI }    from "./js/hanrei.js?v=20260923i";
-import { JOUBUN }    from "./js/joubun.js?v=20260923i";
-import { scoreCase } from "./js/drill.js?v=20260923i";
+import { CASES }     from "./js/cases.js?v=20260923j";
+import { HANREI }    from "./js/hanrei.js?v=20260923j";
+import { JOUBUN }    from "./js/joubun.js?v=20260923j";
+import { scoreCase } from "./js/drill.js?v=20260923j";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -509,6 +509,11 @@ const PROBES = [
   ["kokubai-1-gaikei", "外形では判断しない。主観的に職務執行の意思がないから、C県の主張は認められる。", 0, 0],
   ["kokubai-1-gaikei", "職務執行の外形を備えれば当たるので、C県は賠償責任を負う。", 14, 14],
   ["kokubai-1-gaikei", "主観にかかわらず、客観的に職務執行の外形があれば職務を行うについてに当たり、C県の主張は失当である。", 20, 20],
+  ["kokubai-1-kouken", "判例は、統治作用に属する一切の活動から、純粋私経済作用を除くすべてとしており、A市の主張は認めらない。", 12, 12],  // 実際の答案（当てはめ抜け・誤字）
+  ["kokubai-1-kouken", "教育活動は権力的作用ではないので公権力の行使に当たらず、A市の主張は認められる。", 0, 0],
+  ["kokubai-1-kouken", "公権力の行使は命令・強制を伴う権力的作用に限られ、教育活動は含まれない。", 0, 0],
+  ["kokubai-1-kouken", "非権力的作用も含まれ、公立学校の教師の教育活動も公権力の行使に当たるから、A市は賠償責任を負う。", 20, 20],
+  ["kokubai-1-kouken", "教育活動も公権力の行使に含まれる。", 8, 8],
   ["kokubai-3",   "管理者はB県であるが、国は費用を半分負担しており、B県及び国対して損害賠償を請求できる。", 20, 20],  // 実際の答案
   ["kokubai-3",   "国は費用を負担していないので、国には請求できない。", 0, 0],
   ["kokubai-3",   "Aは管理者であるB県にのみ請求でき、国には請求できない。", 4, 4],
