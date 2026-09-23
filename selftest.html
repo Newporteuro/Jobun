@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260923l";
-import { HANREI }    from "./js/hanrei.js?v=20260923l";
-import { JOUBUN }    from "./js/joubun.js?v=20260923l";
-import { scoreCase } from "./js/drill.js?v=20260923l";
+import { CASES }     from "./js/cases.js?v=20260923m";
+import { HANREI }    from "./js/hanrei.js?v=20260923m";
+import { JOUBUN }    from "./js/joubun.js?v=20260923m";
+import { scoreCase } from "./js/drill.js?v=20260923m";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -520,6 +520,11 @@ const PROBES = [
   ["kokubai-1-ihou", "起訴時に有罪と認められる嫌疑があれば足り、無罪となっても直ちに違法とはならず、主張は認められない。", 20, 20],
   ["kokubai-1-ihou", "判決時の証拠を基準に、有罪の確信がなければ起訴は違法である。", 0, 0],
   ["kokubai-1-ihou", "無罪となったので直ちに違法であり、嫌疑がなければ賠償が認められる。", 0, 0],
+  ["fufuku-38",   "Cの回答は正しくない。審理員は、第三者を害する事由がない限り、審査請求人からの証拠書類等の閲覧・謄写の求めに応じる義務がある。", 17, 17],  // 実際の答案（その他正当な理由が抜け）
+  ["fufuku-38",   "Cの回答は正しい。写しの交付は認められず、閲覧を認めるかは審理員の裁量である。", 0, 0],
+  ["fufuku-38",   "閲覧も写しの交付も求めることができ、第三者の利益を害するおそれその他正当な理由がなければ拒めないので、Cの回答は誤り。", 20, 20],
+  ["fufuku-38",   "閲覧のみ求めることができ、正当な理由があれば拒める。", 0, 3],
+  ["fufuku-38",   "Cの回答は誤りで、写しの交付も求められるが、閲覧させるかは審理員の裁量で拒むことができる。", 10, 10],
   ["fufuku-31",   "審理員は審査請求人の口頭陳述の求めに応じる義務があり、正しくなく、処分庁への質問は審理員の許可が必要である。", 20, 20],  // 実際の答案
   ["fufuku-31",   "審理は書面が原則なので、口頭意見陳述の機会を与えるかは審理員の裁量であり、Cの回答は正しい。", 0, 0],
   ["fufuku-31",   "Cの回答は誤りで、機会を与えなければならないが、質問は許可なく自由にできる。", 13, 13],
