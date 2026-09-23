@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260923k";
-import { HANREI }    from "./js/hanrei.js?v=20260923k";
-import { JOUBUN }    from "./js/joubun.js?v=20260923k";
-import { scoreCase } from "./js/drill.js?v=20260923k";
+import { CASES }     from "./js/cases.js?v=20260923l";
+import { HANREI }    from "./js/hanrei.js?v=20260923l";
+import { JOUBUN }    from "./js/joubun.js?v=20260923l";
+import { scoreCase } from "./js/drill.js?v=20260923l";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -520,6 +520,11 @@ const PROBES = [
   ["kokubai-1-ihou", "起訴時に有罪と認められる嫌疑があれば足り、無罪となっても直ちに違法とはならず、主張は認められない。", 20, 20],
   ["kokubai-1-ihou", "判決時の証拠を基準に、有罪の確信がなければ起訴は違法である。", 0, 0],
   ["kokubai-1-ihou", "無罪となったので直ちに違法であり、嫌疑がなければ賠償が認められる。", 0, 0],
+  ["fufuku-31",   "審理員は審査請求人の口頭陳述の求めに応じる義務があり、正しくなく、処分庁への質問は審理員の許可が必要である。", 20, 20],  // 実際の答案
+  ["fufuku-31",   "審理は書面が原則なので、口頭意見陳述の機会を与えるかは審理員の裁量であり、Cの回答は正しい。", 0, 0],
+  ["fufuku-31",   "Cの回答は誤りで、機会を与えなければならないが、質問は許可なく自由にできる。", 13, 13],
+  ["fufuku-31",   "質問は審理員の許可を得てできる。", 7, 7],
+  ["fufuku-31",   "Cの回答は正しく、口頭意見陳述の機会を与える義務はない。処分庁への質問は許可を得ずにできる。", 0, 0],
   ["kokubai-3",   "管理者はB県であるが、国は費用を半分負担しており、B県及び国対して損害賠償を請求できる。", 20, 20],  // 実際の答案
   ["kokubai-3",   "国は費用を負担していないので、国には請求できない。", 0, 0],
   ["kokubai-3",   "Aは管理者であるB県にのみ請求でき、国には請求できない。", 4, 4],
