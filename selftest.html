@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260923h";
-import { HANREI }    from "./js/hanrei.js?v=20260923h";
-import { JOUBUN }    from "./js/joubun.js?v=20260923h";
-import { scoreCase } from "./js/drill.js?v=20260923h";
+import { CASES }     from "./js/cases.js?v=20260923i";
+import { HANREI }    from "./js/hanrei.js?v=20260923i";
+import { JOUBUN }    from "./js/joubun.js?v=20260923i";
+import { scoreCase } from "./js/drill.js?v=20260923i";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -504,6 +504,11 @@ const PROBES = [
   ["gyoso-14",    "処分を知った日の翌日から3か月、処分の日の翌日から1年。正当な理由があれば例外。", 12, 12],
   ["gyoso-14",    "処分を知った日から6か月、処分の日から1年を過ぎると、正当な理由があっても提起できない。", 15, 15],
   ["gyoso-14",    "処分があったことを知った日から六箇月、処分の日から一年。ただし正当な理由があるときはこの限りでない。", 20, 20],
+  ["kokubai-1-gaikei", "私利目的で職務を行う意思がなくても、外形上職務を行う外観を伴えば、職務執行とみなされ、Cの主張は認められない。", 20, 20],  // 実際の答案
+  ["kokubai-1-gaikei", "Bは非番で私利目的なので、職務を行うについてに当たらず、C県の主張は認められる。", 0, 0],
+  ["kokubai-1-gaikei", "外形では判断しない。主観的に職務執行の意思がないから、C県の主張は認められる。", 0, 0],
+  ["kokubai-1-gaikei", "職務執行の外形を備えれば当たるので、C県は賠償責任を負う。", 14, 14],
+  ["kokubai-1-gaikei", "主観にかかわらず、客観的に職務執行の外形があれば職務を行うについてに当たり、C県の主張は失当である。", 20, 20],
   ["kokubai-3",   "管理者はB県であるが、国は費用を半分負担しており、B県及び国対して損害賠償を請求できる。", 20, 20],  // 実際の答案
   ["kokubai-3",   "国は費用を負担していないので、国には請求できない。", 0, 0],
   ["kokubai-3",   "Aは管理者であるB県にのみ請求でき、国には請求できない。", 4, 4],
