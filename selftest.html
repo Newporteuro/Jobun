@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260923f";
-import { HANREI }    from "./js/hanrei.js?v=20260923f";
-import { JOUBUN }    from "./js/joubun.js?v=20260923f";
-import { scoreCase } from "./js/drill.js?v=20260923f";
+import { CASES }     from "./js/cases.js?v=20260923g";
+import { HANREI }    from "./js/hanrei.js?v=20260923g";
+import { JOUBUN }    from "./js/joubun.js?v=20260923g";
+import { scoreCase } from "./js/drill.js?v=20260923g";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -489,6 +489,11 @@ const PROBES = [
   ["fufuku-83",   "B大臣に不服申立書を提出でき、B大臣が審査する。", 0, 0],
   ["fufuku-83",   "A県知事に提出できるが、知事はB大臣に送付する必要はない。", 6, 6],
   ["fufuku-83",   "処分庁に不服申立書を出すことができ、処分庁は速やかにB大臣に送付し、初めからB大臣に審査請求がされたものとみなされる。", 20, 20],
+  ["gyoso-14-3",  "原裁決を知った日から６か月及び裁決の日から１年の出訴期間に原処分の取消訴訟を提訴することができる。", 20, 20],  // 実際の答案
+  ["gyoso-14-3",  "処分を知った日から6か月が過ぎているので、提起できない。", 0, 4],
+  ["gyoso-14-3",  "処分を知った日から6か月、処分の日から1年以内に提起できる。", 0, 8],
+  ["gyoso-14-3",  "審査請求をしたので提起でき、裁決を知った日の翌日から3か月、裁決の日の翌日から1年以内。", 16, 16],
+  ["gyoso-14-3",  "裁決を知った日から六箇月以内、裁決の日から一年以内であれば、処分の取消しの訴えを提起することができる。", 20, 20],
   ["gyoso-46",    "取消訴訟を提起できる旨、出訴期間、地方公共団体甲を被告とすることを書面で教示しなければならない。", 14, 14],  // 実際の答案（前置の旨が抜け）
   ["gyoso-46",    "被告とすべき甲市長、出訴期間、審査請求前置の旨を書面で教示する。", 14, 14],
   ["gyoso-46",    "審査請求を経る必要はなく、口頭で教示すればよい。", 0, 0],
