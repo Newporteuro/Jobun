@@ -228,3 +228,13 @@ footer a{color:var(--ai)}
 .msg.err{background:var(--shu-pale);color:#8E2620;border-left:3px solid var(--shu)}
 .msg.info{background:var(--paper-raised);color:var(--sumi-soft);border-left:3px solid var(--hairline)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* 採点録：問題ごとの成績を得点率の低い順に並べる */
+.rec{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+.rec th{font-weight:600;color:var(--sumi-soft);text-align:left;border-bottom:1px solid var(--hairline);padding:6px 4px;white-space:nowrap}
+.rec td{border-bottom:1px solid var(--hairline);padding:8px 4px;vertical-align:middle}
+.rec td.num{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.rec td.n{font-weight:700}
+.rec td.n.hi{color:var(--wakaba)} .rec td.n.mid{color:#9A6B1E} .rec td.n.lo{color:var(--shu)}
+.rec .recg{display:block;font-size:11px;color:var(--sumi-soft)}
+.rec button.recgo{padding:6px 10px;font-size:12px;white-space:nowrap;width:auto}

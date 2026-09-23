@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260923m";
+export const VERSION = "20260923n";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260923m";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260923n";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260923m";
+} from "./sources.js?v=20260923n";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260923m";
-import { CASES } from "./cases.js?v=20260923m";
-import { HANREI } from "./hanrei.js?v=20260923m";
-import { JOUBUN } from "./joubun.js?v=20260923m";
+} from "./drill.js?v=20260923n";
+import { CASES } from "./cases.js?v=20260923n";
+import { HANREI } from "./hanrei.js?v=20260923n";
+import { JOUBUN } from "./joubun.js?v=20260923n";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -40,6 +40,7 @@ const state = {
   recentTashi: [],       // 直近に出した多肢選択のid
   joubun: null,          // 出題中の条文穴埋め
   recentJoubun: [],      // 直近に出した条文穴埋めのid
+  recMode: "case",       // 採点録で開いている形式
   joubunox: null,        // 出題中の条文○×
   recentJoubunox: [],    // 直近に出した条文○×のkey
   maru: "",              // ○×の選択
@@ -197,9 +198,11 @@ function initControls() {
     setTimeout(() => { const c = $("#cover"); if (c) c.remove(); }, 500);
   });
   $("#logSave").addEventListener("click", saveLogFile);
+  $("#logShow").addEventListener("click", () => $("#record").hidden ? showRecord() : hideRecord());
   $("#logClear").addEventListener("click", () => {
     if (!confirm("たまっている解答の記録を消去します。よろしいですか。")) return;
     try { localStorage.removeItem(LOG_KEY); } catch (e) {}
+    hideRecord();
     syncLogPanel();
   });
   syncLogPanel();
@@ -1324,7 +1327,8 @@ function buildLog(c, s, input) {
    ファイルとして直接受け取れるようにしている。
    ══════════════════════════════════════════════ */
 const LOG_KEY = "jobun-answer-log";
-const LOG_MAX = 300;
+// 採点録は記録が多いほど役に立つ。1件は数百字なので、1000件でもブラウザの保存枠に収まる
+const LOG_MAX = 1000;
 
 function readLog() {
   try { return JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); } catch (e) { return []; }
@@ -1350,7 +1354,121 @@ function syncLogPanel() {
       + `（${CASES.length}問中${done}問を解答済み、うち重点は${weak}問）`
     : "事例記述を採点すると、ここに1件ずつたまります。";
   $("#logSave").disabled = !n;
+  $("#logShow").disabled = !n;
+  // 採点録を開いたまま解いたら、その結果も一覧に反映する
+  if (!$("#record").hidden) showRecord();
   $("#logClear").disabled = !n;
+}
+
+/* ══════════════════════════════════════════════
+   採点録
+
+   記録を問題ごとに束ね、直近の得点率が低い順に並べる。苦手な問題を選んで
+   解き直すための画面で、各行の「解く」でその問題だけを出題する。
+
+   事例記述は、記録に残っている答案をいまの採点器で採点し直して出す。
+   採点器は直し続けているので、当時の点数のままでは比べられない。
+   採点漏れで0点になっていた答案が、直ったあとも「苦手」に並び続けてしまう。
+   ══════════════════════════════════════════════ */
+const REC_MODES = [
+  ["case", "事例記述"], ["hanrei", "判例○×"], ["joubunox", "条文○×"],
+  ["tashi", "多肢選択"], ["joubun", "条文穴埋め"],
+];
+
+function recordRows(mode) {
+  const rows = new Map();
+  /* 判例○×と条文○×は、1つの判例・条文に肢（空欄）がいくつもある。最後に解いた
+     1肢の正誤を「直近」にすると、他の肢を落としていても100%と出てしまうので、
+     肢ごとの最新の正誤を束ねた正答率を「直近」とする。item はその肢の key */
+  const put = (id, label, group, pct, item) => {
+    const r = rows.get(id) || {id, label, group, n: 0, sum: 0, last: 0, items: new Map()};
+    r.n++; r.sum += pct;
+    if (item === undefined) r.last = pct;
+    else {
+      r.items.set(item, pct);
+      r.last = [...r.items.values()].reduce((a, b) => a + b, 0) / r.items.size;
+    }
+    rows.set(id, r);
+  };
+  const judged = text => (/判定:\s*(正解|不正解)/.exec(text) || [])[1];
+  const eight  = text => { const s = /得点:\s*(\d+)\/(\d+)/.exec(text); return s && +s[2] ? +s[1] / +s[2] : null; };
+  for (const text of readLog()) {
+    let m;
+    if (mode === "case" && (m = /^\[([A-Za-z0-9-]+)\] /m.exec(text))) {
+      const c = CASES.find(x => x.id === m[1]);
+      const a = /私の解答\(\d+字\): ([\s\S]*?)\n得点:/.exec(text);
+      if (!c || !a || !a[1].trim()) continue;
+      const s = scoreCase(a[1], c.points);
+      put(c.id, c.topic, c.field, s.earned / s.full);
+    } else if (mode === "hanrei" && (m = /\[判例 (([^\]#]+)#[^\]]*)\]/.exec(text))) {
+      const h = HANREI.find(x => x.id === m[2]), r = judged(text);
+      if (h && r) put(h.id, `${h.caseName}（${h.cite}）`, h.theme, r === "正解" ? 1 : 0, m[1]);
+    } else if (mode === "joubunox" && (m = /\[条文○× (([^\]#]+)#[^\]]*)\]/.exec(text))) {
+      const j = JOUBUN.find(x => x.id === m[2]), r = judged(text);
+      if (j && r) put(j.id, j.title, `${j.law}　${j.chapter}`, r === "正解" ? 1 : 0, m[1]);
+    } else if (mode === "tashi" && (m = /\[多肢 ([^\]\s]+)\]/.exec(text))) {
+      const h = HANREI.find(x => x.id === m[1]), p = eight(text);
+      if (h && p !== null) put(h.id, `${h.caseName}（${h.cite}）`, h.theme, p);
+    } else if (mode === "joubun" && (m = /\[条文 ([^\]\s]+)\]/.exec(text))) {
+      const j = JOUBUN.find(x => x.id === m[1]), p = eight(text);
+      if (j && p !== null) put(j.id, j.title, `${j.law}　${j.chapter}`, p);
+    }
+  }
+  return [...rows.values()].sort((a, b) => (a.last - b.last) || (a.sum / a.n - b.sum / b.n));
+}
+
+function showRecord() {
+  const box = $("#record");
+  const mode = state.recMode;
+  const rows = recordRows(mode);
+  const total = pickSource(mode).length;
+  // 事例記述は本試験と同じ20点満点で見せる。他は得点率
+  const fmt = p => mode === "case" ? `${Math.round(p * 20)}点` : `${Math.round(p * 100)}%`;
+  const cls = p => p >= 1 ? "hi" : p >= 0.7 ? "mid" : "lo";
+  const note = mode === "case"
+    ? "記録にある答案を、いまの採点器で採点し直した点です。"
+    : mode === "hanrei" || mode === "joubunox"
+    ? "判例・条文ごとに、解いた肢それぞれの最新の正誤をまとめた正答率を「直近」、解いたすべての回の正答率を「平均」としています。"
+    : "8点満点の得点率です。";
+  box.innerHTML = `
+    <div class="seg five" id="recTabs">${REC_MODES.map(([v, l]) =>
+      `<button data-v="${v}" aria-pressed="${v === mode}">${l}</button>`).join("")}</div>
+    <p class="hint" style="margin-top:10px">${note}直近の成績が低い順です。
+      ${total}件中${rows.length}件に記録があります。「解く」でその問題だけを出題します
+      （出題する範囲を「すべて」に戻すと通常の出題に戻ります）。</p>
+    ${rows.length ? `<table class="rec">
+      <thead><tr><th>問題</th><th>直近</th><th>平均</th><th>回</th><th></th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td><span class="recg">${esc(r.group || "")}</span>${esc(r.label)}</td>
+        <td class="num n ${cls(r.last)}">${fmt(r.last)}</td>
+        <td class="num">${fmt(r.sum / r.n)}</td>
+        <td class="num">${r.n}</td>
+        <td><button class="ghost recgo" data-id="${esc(r.id)}">解く</button></td>
+      </tr>`).join("")}</tbody></table>`
+    : `<p class="hint">この形式の記録はまだありません。</p>`}`;
+  box.hidden = false;
+  $("#logShow").textContent = "採点録を閉じる";
+  $("#recTabs").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    state.recMode = b.dataset.v; showRecord();
+  });
+  box.querySelectorAll(".recgo").forEach(b =>
+    b.addEventListener("click", () => solveFromRecord(mode, b.dataset.id)));
+}
+
+function hideRecord() {
+  $("#record").hidden = true;
+  $("#record").innerHTML = "";
+  $("#logShow").textContent = "採点録を見る";
+}
+
+/** 採点録の行から、その問題だけを出題する。形式の切り替えと範囲の選択を、
+    画面で押したときと同じ経路でたどる */
+function solveFromRecord(mode, id) {
+  $(`#segMode button[data-v="${mode}"]`).click();
+  state.pickByMode[mode] = "i:" + id;
+  syncPick();
+  draw();
 }
 
 const two = n => String(n).padStart(2, "0");
