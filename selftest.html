@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260923g";
-import { HANREI }    from "./js/hanrei.js?v=20260923g";
-import { JOUBUN }    from "./js/joubun.js?v=20260923g";
-import { scoreCase } from "./js/drill.js?v=20260923g";
+import { CASES }     from "./js/cases.js?v=20260923h";
+import { HANREI }    from "./js/hanrei.js?v=20260923h";
+import { JOUBUN }    from "./js/joubun.js?v=20260923h";
+import { scoreCase } from "./js/drill.js?v=20260923h";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -504,6 +504,11 @@ const PROBES = [
   ["gyoso-14",    "処分を知った日の翌日から3か月、処分の日の翌日から1年。正当な理由があれば例外。", 12, 12],
   ["gyoso-14",    "処分を知った日から6か月、処分の日から1年を過ぎると、正当な理由があっても提起できない。", 15, 15],
   ["gyoso-14",    "処分があったことを知った日から六箇月、処分の日から一年。ただし正当な理由があるときはこの限りでない。", 20, 20],
+  ["kokubai-3",   "管理者はB県であるが、国は費用を半分負担しており、B県及び国対して損害賠償を請求できる。", 20, 20],  // 実際の答案
+  ["kokubai-3",   "国は費用を負担していないので、国には請求できない。", 0, 0],
+  ["kokubai-3",   "Aは管理者であるB県にのみ請求でき、国には請求できない。", 4, 4],
+  ["kokubai-3",   "費用負担者である国もB県とともに賠償責任を負う。", 12, 12],
+  ["kokubai-3",   "国は責任を負わない。道路を管理するB県だけが賠償責任を負う。", 0, 4],
   ["gyoso-14-3",  "原裁決を知った日から６か月及び裁決の日から１年の出訴期間に原処分の取消訴訟を提訴することができる。", 20, 20],  // 実際の答案
   ["gyoso-14-3",  "処分を知った日から6か月が過ぎているので、提起できない。", 0, 4],
   ["gyoso-14-3",  "処分を知った日から6か月、処分の日から1年以内に提起できる。", 0, 8],
