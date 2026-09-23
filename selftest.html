@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260924a";
-import { HANREI }    from "./js/hanrei.js?v=20260924a";
-import { JOUBUN }    from "./js/joubun.js?v=20260924a";
-import { scoreCase } from "./js/drill.js?v=20260924a";
+import { CASES }     from "./js/cases.js?v=20260924b";
+import { HANREI }    from "./js/hanrei.js?v=20260924b";
+import { JOUBUN }    from "./js/joubun.js?v=20260924b";
+import { scoreCase } from "./js/drill.js?v=20260924b";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -521,6 +521,9 @@ const PROBES = [
   ["kokubai-1-ihou", "判決時の証拠を基準に、有罪の確信がなければ起訴は違法である。", 0, 0],
   ["kokubai-1-ihou", "無罪となったので直ちに違法であり、嫌疑がなければ賠償が認められる。", 0, 0],
   /* 2026-09-23 実際の答案で出た取りこぼし2件 */
+  ["kokubai-1-kouken", "非権力的作用も公権力の行使に当たり、公立学校の教師の指導もそれに当たり、主張は認められない。", 20, 20],  // 実際の答案（12点だった。「指導」を拾えず）
+  ["kokubai-1-kouken", "教師の指導は公権力の行使に当たらず、A市の主張は認められる。", 0, 0],
+  ["gyoso-14-3",  "原処分の取消訴訟も提起することができる。出訴期間は、裁決を知った日から六箇月かつ採決の日から一年となる。", 14, 14],  // 実際の答案（採決は誤字なので1年の点は与えない）
   ["fufuku-83",   "A県知事に提出でき、知事は速やかにB大臣に対し送付し、初めからBに審査請求したとみなされる。", 20, 20],  // 実際の答案（16点だった。「審査請求した」を拾えず）
   ["fufuku-22",   "E大臣は速やかにD県知事に送付して乙に通知し、初めからD県知事に審査請求したとみなされる。", 20, 20],
   ["fufuku-83",   "A県知事に提出でき、知事はB大臣に送付し、初めから審査請求をしなかったものとみなされる。", 0, 13],
