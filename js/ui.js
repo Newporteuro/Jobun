@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260923p";
+export const VERSION = "20260923q";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260923p";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260923q";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260923p";
+} from "./sources.js?v=20260923q";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260923p";
-import { CASES } from "./cases.js?v=20260923p";
-import { HANREI } from "./hanrei.js?v=20260923p";
-import { JOUBUN } from "./joubun.js?v=20260923p";
+} from "./drill.js?v=20260923q";
+import { CASES } from "./cases.js?v=20260923q";
+import { HANREI } from "./hanrei.js?v=20260923q";
+import { JOUBUN } from "./joubun.js?v=20260923q";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -1116,10 +1116,13 @@ function renderSheet() {
   if (drill.mode === "case") {
     // 論点名は答えそのものなので、採点するまで伏せておく
     const c = state.kase;
+    // 字数は設問の「〇字程度」に合わせる。対象・行政庁・期間を並べる問題のように、
+    // 40字では収まらない設問があるため
+    const chars = +((/(\d+)字程度/.exec(askOf(c)) || [])[1]) || 40;
     html = `
       <div class="artline">
         <span class="artno">記述式　${esc(c.field)}</span>
-        <span class="artcap">40字程度・20点</span>
+        <span class="artcap">${chars}字程度・20点</span>
       </div>
       <div class="meta">
         <span class="modetag">${esc(MODE_LABEL.case)}</span>
@@ -1127,7 +1130,7 @@ function renderSheet() {
       </div>
       <div class="facts">${esc(c.facts)}</div>
       <div class="ask">${esc(askOf(c))}</div>`;
-    return finishSheet(html, 40);
+    return finishSheet(html, chars);
   }
 
   const w = weightOf(ref.law.id, ref.num);

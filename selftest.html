@@ -32,10 +32,10 @@
 
 <script type="module">
 /* ?v= は ui.js の VERSION と揃える */
-import { CASES }     from "./js/cases.js?v=20260923p";
-import { HANREI }    from "./js/hanrei.js?v=20260923p";
-import { JOUBUN }    from "./js/joubun.js?v=20260923p";
-import { scoreCase } from "./js/drill.js?v=20260923p";
+import { CASES }     from "./js/cases.js?v=20260923q";
+import { HANREI }    from "./js/hanrei.js?v=20260923q";
+import { JOUBUN }    from "./js/joubun.js?v=20260923q";
+import { scoreCase } from "./js/drill.js?v=20260923q";
 
 const out = document.getElementById("out");
 let ngCount = 0;
@@ -521,6 +521,9 @@ const PROBES = [
   ["kokubai-1-ihou", "判決時の証拠を基準に、有罪の確信がなければ起訴は違法である。", 0, 0],
   ["kokubai-1-ihou", "無罪となったので直ちに違法であり、嫌疑がなければ賠償が認められる。", 0, 0],
   /* 2026-09-23 実際の答案で出た取りこぼし2件 */
+  ["minpo-717",   "Bは必要な注意により免責され、所有者Aが無過失でも損害賠償責任を負う。", 20, 20],  // 実際の答案（13点だった）
+  ["minpo-717",   "Bは必要な注意をしても免責されず、Aも責任を負う。", 0, 7],
+  ["fufuku-6",    "原裁決および原処分を対象として、G審査会に対し、原裁決を知った日の翌日から１か月以内かつ採決から１年以内に再審査請求できる。", 16, 16],  // 実際の答案（採決は誤字なので1年の点は与えない）
   ["minpo-482",   "代物弁済契約は諾成契約であり、契約締結時点で債務は消滅しない。消滅には時計の引渡が必要である。", 20, 20],  // 実際の答案（12点だった）
   ["minpo-482",   "代物弁済契約は諾成契約で、契約締結時に債務は消滅し、消滅には引渡しは必要ない。", 0, 6],
   ["minpo-482",   "代物弁済契約は諾成契約であり、時計の引渡しによって初めて債務が消滅する。", 20, 20],  // 「初めて」で締結時の不消滅も含意される
