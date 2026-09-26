@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260924c";
+export const VERSION = "20260926a";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260924c";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260926a";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260924c";
+} from "./sources.js?v=20260926a";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260924c";
-import { CASES } from "./cases.js?v=20260924c";
-import { HANREI } from "./hanrei.js?v=20260924c";
-import { JOUBUN } from "./joubun.js?v=20260924c";
+} from "./drill.js?v=20260926a";
+import { CASES } from "./cases.js?v=20260926a";
+import { HANREI } from "./hanrei.js?v=20260926a";
+import { JOUBUN } from "./joubun.js?v=20260926a";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -1420,6 +1420,15 @@ function recordRows(mode) {
   return [...rows.values()].sort((a, b) => (a.last - b.last) || (a.sum / a.n - b.sum / b.n));
 }
 
+/** 「最大判令2.11.25」から判決日を 20201125 の形で得る。読めなければ 0（末尾に回る） */
+const ERA_BASE = {明: 1867, 大: 1911, 昭: 1925, 平: 1988, 令: 2018};
+function judgmentDate(cite) {
+  const m = /(明|大|昭|平|令)(元|\d+)\.(\d+)\.(\d+)/.exec(cite || "");
+  if (!m) return 0;
+  const y = ERA_BASE[m[1]] + (m[2] === "元" ? 1 : +m[2]);
+  return y * 10000 + (+m[3]) * 100 + (+m[4]);
+}
+
 function showRecord() {
   const box = $("#record");
   const mode = state.recMode;
@@ -1437,11 +1446,15 @@ function showRecord() {
     const x = byId.get(r.id), all = x ? itemTotal(x) : 0;
     return all ? `（肢 ${r.items.size}/${all}）` : "";
   };
-  // 記録のない問題は、出題範囲の選択と同じ目次の順に並べる
+  /* 記録のない問題は、出題範囲の選択と同じ目次の順に並べる。
+     多肢選択だけは判決の新しい順にする。判例を年代で探して選べるほうが
+     選びやすい、という要望による（2026-09-26） */
   const seen = new Set(rows.map(r => r.id));
+  const byToc = (a, b) => (pickOrd(pickGroupOf(mode, a[0])) - pickOrd(pickGroupOf(mode, b[0]))) || (a[1] - b[1]);
+  const byNewest = (a, b) => (judgmentDate(b[0].cite) - judgmentDate(a[0].cite)) || (a[1] - b[1]);
   const unsolved = src.filter(x => !seen.has(x.id))
     .map((x, i) => [x, i])
-    .sort((a, b) => (pickOrd(pickGroupOf(mode, a[0])) - pickOrd(pickGroupOf(mode, b[0]))) || (a[1] - b[1]))
+    .sort(mode === "tashi" ? byNewest : byToc)
     .map(([x]) => x);
   const unsolvedLabel = x => mode === "case" ? x.topic
     : mode === "hanrei" || mode === "tashi" ? `${x.caseName}（${x.cite}）` : x.title;
