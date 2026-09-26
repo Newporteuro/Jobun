@@ -7,20 +7,20 @@
 /* すべての import に同じ ?v= を付ける。GitHub Pages は max-age=600 を返すため、
    これが無いと index.html だけ新しく、モジュールは古いままという状態が10分間続く。
    ファイルを更新したら VERSION と各 import の ?v= を必ず揃えて上げ直すこと。 */
-export const VERSION = "20260926a";
+export const VERSION = "20260926b";
 
-import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260926a";
+import { LAWS, SCOPES, weightOf } from "./weights.js?v=20260926b";
 import {
   fetchArticle, fetchIndex, renderArticle, fullText,
   fetchWikitext, parsePrecedents, wikiURL,
-} from "./sources.js?v=20260926a";
+} from "./sources.js?v=20260926b";
 import {
   makeBlank, makeDescriptive,
   isPoorQuestion, similarity, scoreCase, weightedPick, pick,
-} from "./drill.js?v=20260926a";
-import { CASES } from "./cases.js?v=20260926a";
-import { HANREI } from "./hanrei.js?v=20260926a";
-import { JOUBUN } from "./joubun.js?v=20260926a";
+} from "./drill.js?v=20260926b";
+import { CASES } from "./cases.js?v=20260926b";
+import { HANREI } from "./hanrei.js?v=20260926b";
+import { JOUBUN } from "./joubun.js?v=20260926b";
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -674,6 +674,9 @@ function presentTashi() {
       <span class="modetag">${esc(MODE_LABEL.tashi)}</span>
       <span>次の文章の空欄に語群から適する語を入れてください</span>
     </div>
+    <!-- 出典（裁判所と日付）だけを出し、通称は採点後まで伏せる。本試験は判決文の
+         末尾に出典を付けるが、判例変更の前か後かを日付で先に確かめられるよう上に置く -->
+    <p class="topicline">${esc(h.cite)}</p>
     <div class="facts">${factsHtml}</div>
     <div class="ask passage">${body}</div>
     <div class="answer">
